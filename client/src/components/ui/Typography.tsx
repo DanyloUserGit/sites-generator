@@ -1,5 +1,5 @@
 import { TypographyVariants } from '@/types';
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 export default function Typography({
   children,

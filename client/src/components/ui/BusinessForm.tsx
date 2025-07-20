@@ -41,6 +41,7 @@ export default function BusinessForm({
   };
   const handleCreateFromInput = async () => {
     try {
+      validateForm();
       if (!language) return;
       const response = await fetch(`${baseUrl}/api/sites/create-from-input`, {
         method: 'POST',
@@ -49,7 +50,6 @@ export default function BusinessForm({
       });
 
       if (!response.ok) {
-        const error = await response.text();
         return;
       }
       router.replace('/');

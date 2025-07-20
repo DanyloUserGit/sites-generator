@@ -40,7 +40,6 @@ export default function CreateSite() {
       });
 
       if (!response.ok) {
-        const error = await response.text();
         return;
       }
       router.replace('/');
