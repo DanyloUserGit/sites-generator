@@ -1,0 +1,70 @@
+import { useEffect, useState } from 'react';
+import Header from './Header';
+import { baseUrl } from '@/utils';
+import DashboardItem from './DashboardItem';
+import { Site } from '@/types';
+
+export default function Dashboard() {
+  const PAGE_SIZE = 5;
+
+  const [sites, setSites] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
+  useEffect(() => {
+    fetch(`${baseUrl}/api/sites?page=${page}&limit=${PAGE_SIZE}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSites(data.data);
+        setTotalPages(data.totalPages);
+      });
+  }, [page]);
+
+  return (
+    <div className="mt-12 flex flex-col">
+      <>
+        {totalPages && sites ? (
+          <>
+            <Header />
+            {sites.map((site: Site) => (
+              <DashboardItem
+                key={site.id}
+                id={site.id}
+                city={site.city}
+                services={site.services}
+                language={site.language}
+                createdAt={site.createdAt}
+              />
+            ))}
+
+            {totalPages > 1 ? (
+              <div className="flex justify-center items-center gap-2 mt-4">
+                <button
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-lg bg-neutral-700 text-neutral-100 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-neutral-400 text-sm">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-lg bg-neutral-700 text-neutral-100 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            ) : (
+              ''
+            )}
+          </>
+        ) : (
+          ''
+        )}
+      </>
+    </div>
+  );
+}
