@@ -10,6 +10,8 @@ import { SitesModule } from './sites/sites.module';
 import { AuthModule } from './auth/auth.module';
 import { LanguagesModule } from './languages/languages.module';
 import { CsvModule } from './csv/csv.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -28,6 +30,12 @@ import { CsvModule } from './csv/csv.module';
     AuthModule,
     LanguagesModule,
     CsvModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export class AppModule {}

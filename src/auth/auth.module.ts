@@ -6,10 +6,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { Admin } from './entities/admin.entity';
 import { AppConfigModule } from 'src/config/config.module';
 import { AppConfigService } from 'src/config/config.service';
+import { JwtStrategy } from './jwt-auth.strategy';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Admin]),
+    AppConfigModule,
     JwtModule.registerAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],
@@ -19,7 +21,7 @@ import { AppConfigService } from 'src/config/config.service';
       }),
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

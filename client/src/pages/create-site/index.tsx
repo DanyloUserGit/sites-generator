@@ -2,6 +2,7 @@ import BusinessForm from '@/components/ui/BusinessForm';
 import Button from '@/components/ui/Button';
 import File from '@/components/ui/File';
 import Typography from '@/components/ui/Typography';
+import { useAuth } from '@/hooks/AuthContext';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 import { baseUrl } from '@/utils';
 import Head from 'next/head';
@@ -24,7 +25,7 @@ export default function CreateSite() {
       setShowForm(true);
     }
   }, [file]);
-
+  const token = useAuth();
   const handleCreateFromFile = async () => {
     if (!file) {
       return;
@@ -32,11 +33,11 @@ export default function CreateSite() {
 
     const formData = new FormData();
     formData.append('file', file);
-
     try {
       const response = await fetch(`${baseUrl}/api/csv/create-from-file`, {
         method: 'POST',
         body: formData,
+        headers: { Authorization: `Bearer ${token.token}` },
       });
 
       if (!response.ok) {

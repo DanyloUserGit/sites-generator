@@ -1,10 +1,11 @@
 'use client';
 
+import { baseUrl } from '@/utils';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Button from './Button';
 import LanguageAutoSearch from './LanguageAutoSearch';
-import { useRouter } from 'next/router';
-import { baseUrl } from '@/utils';
+import { useAuth } from '@/hooks/AuthContext';
 
 export default function BusinessForm({
   setShowFile,
@@ -14,6 +15,7 @@ export default function BusinessForm({
   const [city, setCity] = useState('');
   const [services, setServices] = useState('');
   const [language, setLanguage] = useState<string | null>(null);
+  const token = useAuth();
   const [errors, setErrors] = useState<{
     city?: string;
     services?: string;
@@ -45,7 +47,10 @@ export default function BusinessForm({
       if (!language) return;
       const response = await fetch(`${baseUrl}/api/sites/create-from-input`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token.token}`,
+        },
         body: JSON.stringify({ city, services, language }),
       });
 

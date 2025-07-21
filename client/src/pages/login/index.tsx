@@ -11,7 +11,6 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const res = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
@@ -28,7 +27,7 @@ export default function Login() {
       }
 
       const data = await res.json();
-      setToken(data.token);
+      setToken(data.access_token);
 
       router.push('/');
     } catch (error) {

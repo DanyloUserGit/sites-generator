@@ -1,7 +1,8 @@
 'use client';
 
+import { useAuth } from '@/hooks/AuthContext';
 import { baseUrl } from '@/utils';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Language = { lname: string; lcode: string };
 
@@ -14,7 +15,7 @@ export default function LanguageAutoSearch({
   const [showLang, setShowLang] = useState('');
   const [languages, setLanguages] = useState<Language[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const token = useAuth();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -31,10 +32,10 @@ export default function LanguageAutoSearch({
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
     const timeout = setTimeout(() => {
       fetch(`${baseUrl}/api/languages?query=${encodeURIComponent(query)}`, {
         signal: controller.signal,
+        headers: { Authorization: `Bearer ${token.token}` },
       })
         .then(async (res) => {
           if (!res.ok) throw new Error('Network response was not ok');
