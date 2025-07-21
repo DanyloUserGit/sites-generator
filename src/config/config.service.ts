@@ -10,6 +10,7 @@ export class AppConfigService {
     this.config = {
       port: this.configService.get<number>('PORT', 3000),
       jwt_secret: this.configService.get<string>('JWT_SECRET'),
+      openai_key: this.configService.get<string>('OPENAI_KEY'),
       database: {
         host: this.configService.get<string>('DB_HOST'),
         port: this.configService.get<number>('DB_PORT', 5432),

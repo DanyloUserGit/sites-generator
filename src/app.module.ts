@@ -12,6 +12,7 @@ import { LanguagesModule } from './languages/languages.module';
 import { CsvModule } from './csv/csv.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { GenerateContentModule } from './generate-content/generate-content.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     AuthModule,
     LanguagesModule,
     CsvModule,
+    GenerateContentModule,
   ],
   providers: [
     {

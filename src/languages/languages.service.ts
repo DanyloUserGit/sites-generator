@@ -5,6 +5,28 @@ import ISO6391 from 'iso-639-1';
 export class LanguagesService {
   constructor() {}
 
+  async codeToName(code: string) {
+    try {
+      const name = ISO6391.getName(code);
+      if (!name) throw Error('Invalid language code' + code);
+
+      return name;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async nameToCode(name: string) {
+    try {
+      const code = ISO6391.getCode(name);
+      if (!code) throw Error('Invalid language name' + name);
+
+      return code;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getThreeLangs(query: string) {
     try {
       const languageNames = ISO6391.getAllNames();

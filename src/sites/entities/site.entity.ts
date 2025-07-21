@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Page } from './page-entities/page.entity';
 
 @Entity({ name: 'sites' })
 export class Site {
@@ -19,6 +21,9 @@ export class Site {
 
   @Column({ length: 65 })
   language: string;
+
+  @OneToMany(() => Page, (page) => page.site, { cascade: true })
+  pages: Page[];
 
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
