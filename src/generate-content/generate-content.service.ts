@@ -82,6 +82,7 @@ export class GenerateContentService {
       const resSiteInfo = await this.generateSiteInfo(siteId);
       if (!resSiteInfo) throw new Error('Error while generating site info');
       const pages = Object.values(HugoFreshFivePages);
+      await this.generateFaviconSvg(siteId);
       for (const pageName of pages) {
         await this.updateGenerationStatus(
           siteId,
@@ -303,20 +304,23 @@ export class GenerateContentService {
       throw error;
     }
   }
-  generateFaviconSvg(companyName: string): string {
-    const initials = companyName
+  private async generateFaviconSvg(siteId: string) {
+    const site = await this.siteRepository.findOne({ where: { id: siteId } });
+    const initials = site.companyName
       .replaceAll('"', '')
       .split(' ')
       .map((word) => word[0])
       .join('')
       .toUpperCase();
 
-    return `
+    const favIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
       <rect width="100%" height="100%" fill="#000" />
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
         font-size="32" fill="#fff" font-family="Arial, sans-serif">${initials}</text>
     </svg>
   `;
+    site.favIcon = favIcon;
+    await this.siteRepository.save(site);
   }
 }
