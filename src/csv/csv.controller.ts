@@ -21,6 +21,6 @@ export class CsvController {
     }
 
     const result = await this.csvService.createFromCSV(file.buffer);
-    return { data: result };
+    return result;
   }
 }

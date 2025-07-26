@@ -7,7 +7,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest();
     const { url } = request;
 
-    if (url.startsWith('/api/auth')) {
+    if (
+      url.startsWith('/api/auth') ||
+      url.startsWith('/api/generate-content') ||
+      url.startsWith('/api/unsplash') ||
+      url.startsWith('/api/mapbox')
+    ) {
       return true;
     }
     return super.canActivate(context);

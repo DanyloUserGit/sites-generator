@@ -21,11 +21,8 @@ export class PromptPageContent {
   benefitsList: string;
 
   @Column({ type: 'text', nullable: true })
-  formSection: string;
+  formText: string;
 
   @Column({ type: 'text', nullable: true })
-  mapSection: string;
-
-  @Column({ type: 'text', nullable: true })
-  footerSection: string;
+  aiRole: string;
 }

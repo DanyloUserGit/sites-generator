@@ -13,45 +13,35 @@ export class PageContent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => Page, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'page_id' })
+  @OneToOne(() => Page, (page) => page.content, { onDelete: 'CASCADE' })
   page: Page;
 
   @Column({ type: 'text', nullable: true })
-  backgroundImageUrl: string;
-
-  @Column({ type: 'text', nullable: true })
-  sectionIconSvg: string;
-
-  @Column({ length: 255, nullable: true })
   heroTitle: string;
 
   @Column({ type: 'text', nullable: true })
   heroDescription: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   heroCtaText: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   heroCtaUrl: string;
 
   @Column({ type: 'jsonb', nullable: true })
   benefits: string[];
 
   @Column({ type: 'text', nullable: true })
-  formHtml: string;
+  formText: string;
+
+  @Column({ type: 'text', nullable: true })
+  backgroundImageUrl: string;
 
   @Column({ type: 'text', nullable: true })
   mapImageUrl: string;
 
-  @Column({ length: 255, nullable: true })
-  footerCompanyName: string;
-
-  @Column({ length: 255, nullable: true })
-  footerMenu: string;
-
-  @Column({ length: 4, nullable: true })
-  footerYear: string;
+  @Column({ type: 'text', nullable: true })
+  heroCtaImg: string;
 
   @UpdateDateColumn()
   updatedAt: Date;

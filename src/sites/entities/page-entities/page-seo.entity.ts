@@ -15,14 +15,14 @@ export class PageSeo {
   @OneToOne(() => Page, (page) => page.seo, { onDelete: 'CASCADE' })
   page: Page;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, nullable: true })
   metaTitle: string;
 
-  @Column({ length: 255 })
+  @Column({ type: 'text', nullable: true })
   metaDescription: string;
 
-  @Column({ type: 'text' })
-  keywords: string;
+  @Column({ type: 'text', nullable: true })
+  keywords: string[];
 
   @Column({ type: 'jsonb', nullable: true })
   schemaOrg: Record<string, any>;

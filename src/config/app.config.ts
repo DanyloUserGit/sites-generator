@@ -2,6 +2,8 @@ export default () => ({
   port: parseInt(process.env.PORT, 10) || 8000,
   jwt_secret: process.env.JWT_SECRET,
   openai_key: process.env.OPENAI_KEY,
+  unsplash_access_key: process.env.UNSPLASH_ACCESS_KEY,
+  mapbox_token: process.env.MAPBOX_TOKEN,
   database: {
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT, 10) || 5432,

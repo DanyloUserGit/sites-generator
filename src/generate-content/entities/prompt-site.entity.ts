@@ -9,8 +9,8 @@ export class PromptSite {
   title: string;
 
   @Column({ type: 'text', nullable: true })
-  siteDescription: string;
+  companyName: string;
 
   @Column({ type: 'text', nullable: true })
-  siteTitle: string;
+  aiRole: string;
 }

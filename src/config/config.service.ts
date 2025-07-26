@@ -11,6 +11,10 @@ export class AppConfigService {
       port: this.configService.get<number>('PORT', 3000),
       jwt_secret: this.configService.get<string>('JWT_SECRET'),
       openai_key: this.configService.get<string>('OPENAI_KEY'),
+      unsplash_access_key: this.configService.get<string>(
+        'UNSPLASH_ACCESS_KEY',
+      ),
+      mapbox_token: this.configService.get<string>('MAPBOX_TOKEN'),
       database: {
         host: this.configService.get<string>('DB_HOST'),
         port: this.configService.get<number>('DB_PORT', 5432),

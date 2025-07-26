@@ -7,3 +7,8 @@ export interface Site {
   language: string;
   createdAt: string;
 }
+export interface Status {
+  status: string;
+  isError: boolean;
+  isCompleted: boolean;
+}

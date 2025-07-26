@@ -43,7 +43,8 @@ export default function CreateSite() {
       if (!response.ok) {
         return;
       }
-      router.replace('/');
+      const data = await response.json();
+      router.replace(`/generate-site?siteId=${data.id}`);
     } catch (error) {
       console.error('Request failed:', error);
     }

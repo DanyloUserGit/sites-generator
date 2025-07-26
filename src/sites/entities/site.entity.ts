@@ -13,6 +13,9 @@ export class Site {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ length: 255, nullable: true })
+  companyName: string;
+
   @Column({ length: 255 })
   city: string;
 
@@ -24,6 +27,15 @@ export class Site {
 
   @OneToMany(() => Page, (page) => page.site, { cascade: true })
   pages: Page[];
+
+  @Column({ length: 255, nullable: true })
+  slug: string;
+
+  @Column({ type: 'text', nullable: true })
+  favIcon: string;
+
+  @Column({ type: 'simple-array', nullable: true })
+  usedUnsplashIds: string[];
 
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
