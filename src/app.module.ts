@@ -13,6 +13,9 @@ import { CsvModule } from './csv/csv.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { GenerateContentModule } from './generate-content/generate-content.module';
+import { RedisModule } from './redis/redis.module';
+import { UnsplashModule } from './unsplash/unsplash.module';
+import { MapboxModule } from './mapbox/mapbox.module';
 
 @Module({
   imports: [
@@ -32,6 +35,9 @@ import { GenerateContentModule } from './generate-content/generate-content.modul
     LanguagesModule,
     CsvModule,
     GenerateContentModule,
+    RedisModule,
+    UnsplashModule,
+    MapboxModule,
   ],
   providers: [
     {

@@ -4,6 +4,9 @@ export const validationSchema = Joi.object({
   PORT: Joi.number().default(8000),
 
   JWT_SECRET: Joi.string().required(),
+  OPENAI_KEY: Joi.string().required(),
+  UNSPLASH_ACCESS_KEY: Joi.string().required(),
+  MAPBOX_TOKEN: Joi.string().required(),
 
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().default(5432),

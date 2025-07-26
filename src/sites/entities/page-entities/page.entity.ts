@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Site } from '../site.entity';
 import { PageSeo } from './page-seo.entity';
+import { PageContent } from './page-content.entiy';
 
 @Entity({ name: 'pages' })
 export class Page {
@@ -23,8 +24,18 @@ export class Page {
   @JoinColumn({ name: 'seo_id' })
   seo: PageSeo;
 
+  @OneToOne(() => PageContent, (content) => content.page, {
+    cascade: true,
+    eager: true,
+  })
+  @JoinColumn({ name: 'content_id' })
+  content: PageContent;
+
   @Column({ length: 255 })
   slug: string;
+
+  @Column({ length: 255 })
+  pageName: string;
 
   @UpdateDateColumn()
   updatedAt: Date;

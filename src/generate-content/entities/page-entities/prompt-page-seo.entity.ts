@@ -19,4 +19,7 @@ export class PromptPageSeo {
 
   @Column({ type: 'text', nullable: true })
   schemaOrg: string;
+
+  @Column({ type: 'text', nullable: true })
+  aiRole: string;
 }
