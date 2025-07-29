@@ -25,7 +25,10 @@ export class Site {
   @Column({ length: 65 })
   language: string;
 
-  @OneToMany(() => Page, (page) => page.site, { cascade: true })
+  @OneToMany(() => Page, (page) => page.site, {
+    cascade: ['insert', 'update'],
+    onDelete: 'CASCADE',
+  })
   pages: Page[];
 
   @Column({ length: 255, nullable: true })

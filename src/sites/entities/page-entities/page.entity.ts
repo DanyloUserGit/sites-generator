@@ -16,11 +16,17 @@ export class Page {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Site, (site) => site.pages, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Site, (site) => site.pages, {
+    onDelete: 'CASCADE',
+    eager: true,
+  })
   @JoinColumn({ name: 'site_id' })
   site: Site;
 
-  @OneToOne(() => PageSeo, (seo) => seo.page, { cascade: true, eager: true })
+  @OneToOne(() => PageSeo, (seo) => seo.page, {
+    cascade: true,
+    eager: true,
+  })
   @JoinColumn({ name: 'seo_id' })
   seo: PageSeo;
 

@@ -9,6 +9,12 @@ async function bootstrap() {
   const port = config.port;
   app.setGlobalPrefix('api');
 
+  app.enableCors({
+    origin: ['http://localhost:3000'],
+    methods: 'GET,POST,PUT,DELETE',
+    credentials: true,
+  });
+
   await app.listen(port);
   console.log(`Running on: http://localhost:${port}`);
 }

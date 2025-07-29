@@ -12,7 +12,9 @@ export class PageSeo {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => Page, (page) => page.seo, { onDelete: 'CASCADE' })
+  @OneToOne(() => Page, (page) => page.seo, {
+    onDelete: 'CASCADE',
+  })
   page: Page;
 
   @Column({ length: 255, nullable: true })
@@ -21,7 +23,7 @@ export class PageSeo {
   @Column({ type: 'text', nullable: true })
   metaDescription: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   keywords: string[];
 
   @Column({ type: 'jsonb', nullable: true })

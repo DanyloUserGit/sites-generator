@@ -27,6 +27,17 @@ export class GenerateContentController {
     }
     return status;
   }
+  // @Post('unique-image')
+  // async getUniqueImage(@Body() body: { siteId: string; pageId: string }) {
+  //   const img = await this.generateContentService.generateUniqueImage(
+  //     body.siteId,
+  //     body.pageId,
+  //   );
+  //   if (!img) {
+  //     throw new NotFoundException('Status not found');
+  //   }
+  //   return img;
+  // }
 
   @Post('generate-site')
   async generateSite(@Body() body: { siteId: string }) {
@@ -43,6 +54,11 @@ export class GenerateContentController {
     return this.managePromptsService.getAllPromptSites();
   }
 
+  @Get('favicon/:companyName')
+  async generateFaviconSvg(@Param('companyName') companyName: string) {
+    return this.generateContentService.generateFaviconSvg(companyName);
+  }
+
   @Get('prompt-site/:id')
   async getPromptSiteById(@Param('id') id: string) {
     const prompt = await this.managePromptsService.getPromptSiteById(id as any);
@@ -51,13 +67,13 @@ export class GenerateContentController {
   }
 
   @Put('prompt-site/:id')
-  updatePromptSite(@Param('id') id: string, @Body() updates: any) {
-    return this.managePromptsService.updatePromptSite(id as any, updates);
+  async updatePromptSite(@Param('id') id: string, @Body() updates: any) {
+    return await this.managePromptsService.updatePromptSite(id as any, updates);
   }
 
   @Delete('prompt-site/:id')
-  deletePromptSite(@Param('id') id: string) {
-    return this.managePromptsService.deletePromptSite(id as any);
+  async deletePromptSite(@Param('id') id: string) {
+    return await this.managePromptsService.deletePromptSite(id as any);
   }
 
   @Post('prompt-seo')

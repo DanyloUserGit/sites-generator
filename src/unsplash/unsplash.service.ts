@@ -14,8 +14,15 @@ export class UnsplashService {
 
   async getImageUrlByKeyword(keyword: string): Promise<string | null> {
     try {
+      const cleanedKeyword = keyword.trim().replace(/"+/g, '');
+
+      if (!cleanedKeyword || cleanedKeyword.length < 2) {
+        console.warn('Invalid keyword:', keyword);
+        return null;
+      }
+
       const result = await this.unsplash.search.getPhotos({
-        query: keyword,
+        query: cleanedKeyword,
         perPage: 1,
         orientation: 'landscape',
       });
@@ -33,15 +40,40 @@ export class UnsplashService {
   }
 
   async getUniqueImage(
-    keywords: string[],
+    keywordsRaw: string[] | string,
     usedIds: string[],
   ): Promise<{ url: string; id: string } | null> {
-    const usedSet = new Set(usedIds || []);
+    let keywords: string[];
 
-    for (const keyword of keywords) {
+    try {
+      if (Array.isArray(keywordsRaw)) {
+        keywords = keywordsRaw;
+      } else if (typeof keywordsRaw === 'string') {
+        keywords = JSON.parse(keywordsRaw);
+      } else {
+        throw new Error('Invalid keywords type');
+      }
+    } catch (e) {
+      console.warn('Cannot transform keywords:', keywordsRaw);
+      return null;
+    }
+
+    keywords = keywords
+      .map((k) => String(k).replace(/"+/g, '').trim())
+      .filter((k) => k.length > 0);
+
+    if (keywords.length === 0) {
+      console.warn('Empty keyword list');
+      return null;
+    }
+
+    const usedSet = new Set(usedIds || []);
+    const searchTerms = keywords.map((k) => k.split(' ')[0].toLowerCase());
+
+    for (const term of searchTerms) {
       for (let page = 1; page <= 3; page++) {
         const result = await this.unsplash.search.getPhotos({
-          query: keyword,
+          query: term,
           perPage: 5,
           page,
           orientation: 'landscape',

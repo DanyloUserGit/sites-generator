@@ -1,10 +1,23 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { SitesService } from './sites.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import { CrudSitesService } from './crud-sites.service';
 import { CreateSiteDTO } from './dto/create-site.dto';
+import { SitesService } from './sites.service';
 
 @Controller('sites')
 export class SitesController {
-  constructor(private readonly sitesService: SitesService) {}
+  constructor(
+    private readonly sitesService: SitesService,
+    private readonly crudSitesService: CrudSitesService,
+  ) {}
 
   @Get()
   async getSites(
@@ -17,5 +30,20 @@ export class SitesController {
   @Post('create-from-input')
   async createFromInput(@Body() body: CreateSiteDTO) {
     return await this.sitesService.createSite(body);
+  }
+
+  @Get('site/:id')
+  async getSiteInfo(@Param('id') id: string) {
+    return await this.crudSitesService.getSite(id);
+  }
+
+  @Put('site/:id')
+  async updateSite(@Param('id') id: string, @Body() updates: any) {
+    return await this.crudSitesService.updateSite(id, updates);
+  }
+
+  @Delete('site/:id')
+  async deleteSite(@Param('id') id: string) {
+    return await this.crudSitesService.deleteSite(id);
   }
 }

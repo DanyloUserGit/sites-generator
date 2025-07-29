@@ -6,10 +6,11 @@ import { Page } from './entities/page-entities/page.entity';
 import { Site } from './entities/site.entity';
 import { SitesController } from './sites.controller';
 import { SitesService } from './sites.service';
+import { CrudSitesService } from './crud-sites.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Site, Page, PageSeo, PageContent])],
-  providers: [SitesService],
+  providers: [SitesService, CrudSitesService],
   controllers: [SitesController],
   exports: [SitesService],
 })

@@ -69,9 +69,13 @@ export class GenerateContentService {
       const slug =
         '/' +
         companyNameRes.toLowerCase().replaceAll(' ', '-').replaceAll('"', '');
-
-      site.companyName = companyNameRes.replaceAll('"', '');
+      const companyName = companyNameRes.replaceAll('"', '');
+      site.companyName = companyName;
       site.slug = slug;
+      const svg = await this.generateFaviconSvg(companyName);
+      const encoded = encodeURIComponent(svg);
+      const dataUrl = `data:image/svg+xml;utf8,${encoded}`;
+      site.favIcon = dataUrl;
       return await this.siteRepository.save(site);
     } catch (error) {
       throw error;
@@ -113,12 +117,12 @@ export class GenerateContentService {
         pageName,
         slug: pageSlug,
       });
-      await this.pageRepository.save(page);
-      await this.generatePageSeo(page.id);
-      await this.generatePageContent(page.id);
-      await this.generateBGImage(siteId, page.id);
-      await this.generateUniqueCtaImage(siteId, page.id);
-      await this.generateMapImage(siteId, page.id);
+      const savedPage = await this.pageRepository.save(page);
+      await this.generatePageSeo(savedPage.id);
+      await this.generatePageContent(savedPage.id);
+      await this.generateBGImage(siteId, savedPage.id);
+      await this.generateUniqueCtaImage(siteId, savedPage.id);
+      await this.generateMapImage(siteId, savedPage.id);
     } catch (error) {
       throw error;
     }
@@ -225,15 +229,16 @@ export class GenerateContentService {
       throw error;
     }
   }
-  private async generateBGImage(siteId: string, pageId: string) {
+  async generateBGImage(siteId: string, pageId: string) {
     try {
-      const page = await this.pageRepository.findOne({
+      const homePage = await this.pageRepository.findOne({
         where: {
           pageName: 'home',
           site: { id: siteId },
         },
         relations: ['seo'],
       });
+
       const pageToSave = await this.pageRepository.findOne({
         where: {
           id: pageId,
@@ -242,21 +247,52 @@ export class GenerateContentService {
         relations: ['content'],
       });
 
-      if (!page?.seo?.keywords || page.seo.keywords.length === 0) {
-        throw new Error('Cannot find generated keywords');
+      if (!homePage?.seo?.keywords) {
+        throw new Error('❌ Cannot find generated keywords');
       }
-      const imgKeyword = page.seo.keywords[0].split(' ')[0];
+
+      let keywords: string[];
+      try {
+        if (Array.isArray(homePage.seo.keywords)) {
+          keywords = homePage.seo.keywords;
+        } else if (typeof homePage.seo.keywords === 'string') {
+          keywords = JSON.parse(homePage.seo.keywords);
+        } else {
+          throw new Error('Keywords format invalid');
+        }
+      } catch (e) {
+        console.warn(
+          'Cannot transform into keywords array',
+          homePage.seo.keywords,
+        );
+        throw new Error('Invalid keywords format');
+      }
+
+      const cleanedKeywords = keywords
+        .map((k) => String(k).replace(/"+/g, '').trim())
+        .filter((k) => k.length > 0);
+
+      if (cleanedKeywords.length === 0) {
+        throw new Error('Empty keywords');
+      }
+
+      const imgKeyword = cleanedKeywords[0].split(' ')[0].toLowerCase();
       const imgUrl =
         await this.unsplashService.getImageUrlByKeyword(imgKeyword);
-      if (!imgUrl) throw new Error('Cannot find bg image by keyword');
+
+      if (!imgUrl) {
+        throw new Error(`❌ Cannot find bg image by keyword: "${imgKeyword}"`);
+      }
 
       pageToSave.content.backgroundImageUrl = imgUrl;
       await this.pageRepository.save(pageToSave);
       await this.pageContentRepository.save(pageToSave.content);
     } catch (error) {
+      console.error('generateBGImage error:', error.message);
       throw error;
     }
   }
+
   private async generateUniqueCtaImage(siteId: string, pageId: string) {
     try {
       const page = await this.pageRepository.findOne({
@@ -303,7 +339,7 @@ export class GenerateContentService {
       throw error;
     }
   }
-  generateFaviconSvg(companyName: string): string {
+  async generateFaviconSvg(companyName: string): Promise<string> {
     const initials = companyName
       .replaceAll('"', '')
       .split(' ')
@@ -314,8 +350,8 @@ export class GenerateContentService {
     return `
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
       <rect width="100%" height="100%" fill="#000" />
-      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-        font-size="32" fill="#fff" font-family="Arial, sans-serif">${initials}</text>
+      <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+        font-size="25" fill="#fff" font-family="Arial, sans-serif">${initials}</text>
     </svg>
   `;
   }

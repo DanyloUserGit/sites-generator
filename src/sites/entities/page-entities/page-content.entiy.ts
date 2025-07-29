@@ -13,7 +13,9 @@ export class PageContent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => Page, (page) => page.content, { onDelete: 'CASCADE' })
+  @OneToOne(() => Page, (page) => page.content, {
+    onDelete: 'CASCADE',
+  })
   page: Page;
 
   @Column({ type: 'text', nullable: true })

@@ -1,2 +1,6 @@
 export const baseUrl =
-  typeof window !== 'undefined' ? `${location.protocol}//${location.host}` : '';
+  typeof window !== 'undefined'
+    ? !location.host.includes('localhost')
+      ? `${location.protocol}//${location.host}`
+      : 'http://localhost:8000'
+    : '';

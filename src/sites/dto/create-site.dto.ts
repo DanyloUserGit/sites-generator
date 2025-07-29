@@ -1,4 +1,5 @@
 import { IsString } from '@nestjs/class-validator';
+import { Exclude } from 'class-transformer';
 
 export class CreateSiteDTO {
   @IsString()
@@ -9,4 +10,13 @@ export class CreateSiteDTO {
 
   @IsString()
   language: string;
+}
+
+export class Id {
+  @IsString()
+  id: string;
+}
+export class ExcludeUsedUnsplashIds {
+  @Exclude()
+  usedUnsplashIds: string[];
 }
