@@ -37,7 +37,7 @@ export class Page {
   @JoinColumn({ name: 'content_id' })
   content: PageContent;
 
-  @Column({ length: 255 })
+  @Column({ type: 'text' })
   slug: string;
 
   @Column({ length: 255 })

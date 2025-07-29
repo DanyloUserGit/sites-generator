@@ -13,7 +13,7 @@ export class Site {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   companyName: string;
 
   @Column({ length: 255 })
@@ -31,7 +31,7 @@ export class Site {
   })
   pages: Page[];
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   slug: string;
 
   @Column({ type: 'text', nullable: true })

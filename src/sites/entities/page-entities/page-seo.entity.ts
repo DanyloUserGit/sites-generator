@@ -17,7 +17,7 @@ export class PageSeo {
   })
   page: Page;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   metaTitle: string;
 
   @Column({ type: 'text', nullable: true })
