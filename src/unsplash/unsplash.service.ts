@@ -12,7 +12,9 @@ export class UnsplashService {
     });
   }
 
-  async getImageUrlByKeyword(keyword: string): Promise<string | null> {
+  async getImageUrlByKeyword(
+    keyword: string,
+  ): Promise<{ url: string; id: string } | null> {
     try {
       const cleanedKeyword = keyword.trim().replace(/"+/g, '');
 
@@ -29,7 +31,10 @@ export class UnsplashService {
 
       if (result.type === 'success' && result.response.results.length > 0) {
         const photo = result.response.results[0];
-        return photo.urls.regular;
+        return {
+          url: photo.urls.regular,
+          id: photo.id,
+        };
       }
 
       return null;

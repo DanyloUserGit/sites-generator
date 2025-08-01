@@ -5,6 +5,8 @@ import { Site } from './entities/site.entity';
 import { plainToInstance } from 'class-transformer';
 import { ExcludeUsedUnsplashIds } from './dto/create-site.dto';
 import { Page } from './entities/page-entities/page.entity';
+import { PageSeo } from './entities/page-entities/page-seo.entity';
+import { PageContent } from './entities/page-entities/page-content.entiy';
 
 @Injectable()
 export class CrudSitesService {
@@ -13,6 +15,10 @@ export class CrudSitesService {
     private readonly siteRepository: Repository<Site>,
     @InjectRepository(Page)
     private readonly pageRepository: Repository<Page>,
+    @InjectRepository(PageSeo)
+    private readonly pageSeoRepository: Repository<PageSeo>,
+    @InjectRepository(PageContent)
+    private readonly pageContentRepository: Repository<PageContent>,
   ) {}
 
   async getSite(id: string) {
@@ -30,18 +36,26 @@ export class CrudSitesService {
       return await this.getSite(id);
     } catch (error) {}
   }
+  //loadEagerRelations:true
   async deleteSite(id: string): Promise<void> {
     const site = await this.siteRepository.findOne({
       where: { id },
-      relations: ['pages'],
+      relations: ['pages', 'pages.content', 'pages.seo'],
     });
 
     if (!site) throw new NotFoundException(`Site with id ${id} not found`);
 
-    await Promise.all(
-      site.pages.map((page) => this.pageRepository.remove(page)),
-    );
-
-    await this.siteRepository.remove(site);
+    (site.pages.map(async (page) => {
+      const fullPage = await this.pageRepository.findOne({
+        where: { id: page.id },
+        relations: ['seo', 'content'],
+      });
+      if (fullPage) {
+        await this.pageSeoRepository.remove(fullPage.seo);
+        await this.pageContentRepository.remove(fullPage.content);
+        await this.pageRepository.remove(fullPage);
+      }
+    }),
+      await this.siteRepository.remove(site));
   }
 }

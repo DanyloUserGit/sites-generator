@@ -236,7 +236,7 @@ export class GenerateContentService {
           pageName: 'home',
           site: { id: siteId },
         },
-        relations: ['seo'],
+        relations: ['seo', 'content'],
       });
 
       const pageToSave = await this.pageRepository.findOne({
@@ -244,9 +244,15 @@ export class GenerateContentService {
           id: pageId,
           site: { id: siteId },
         },
-        relations: ['content'],
+        relations: ['content', 'site'],
       });
 
+      if (homePage.content.backgroundImageUrl) {
+        pageToSave.content.backgroundImageUrl =
+          homePage.content.backgroundImageUrl;
+        await this.pageRepository.save(pageToSave);
+        return await this.pageContentRepository.save(pageToSave.content);
+      }
       if (!homePage?.seo?.keywords) {
         throw new Error('❌ Cannot find generated keywords');
       }
@@ -277,16 +283,20 @@ export class GenerateContentService {
       }
 
       const imgKeyword = cleanedKeywords[0].split(' ')[0].toLowerCase();
-      const imgUrl =
+      const imgInfo =
         await this.unsplashService.getImageUrlByKeyword(imgKeyword);
 
-      if (!imgUrl) {
+      if (!imgInfo) {
         throw new Error(`❌ Cannot find bg image by keyword: "${imgKeyword}"`);
       }
-
-      pageToSave.content.backgroundImageUrl = imgUrl;
+      pageToSave.site.usedUnsplashIds = [
+        ...(pageToSave.site.usedUnsplashIds || []),
+        imgInfo.id,
+      ];
+      pageToSave.content.backgroundImageUrl = imgInfo.url;
       await this.pageRepository.save(pageToSave);
       await this.pageContentRepository.save(pageToSave.content);
+      await this.siteRepository.save(pageToSave.site);
     } catch (error) {
       console.error('generateBGImage error:', error.message);
       throw error;
@@ -340,19 +350,7 @@ export class GenerateContentService {
     }
   }
   async generateFaviconSvg(companyName: string): Promise<string> {
-    const initials = companyName
-      .replaceAll('"', '')
-      .split(' ')
-      .map((word) => word[0])
-      .join('')
-      .toUpperCase();
-
-    return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
-      <rect width="100%" height="100%" fill="#000" />
-      <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-        font-size="25" fill="#fff" font-family="Arial, sans-serif">${initials}</text>
-    </svg>
-  `;
+    const logo = await this.openAIService.generateSvg({ companyName });
+    return logo.replaceAll('```svg', '').replaceAll('```', '');
   }
 }

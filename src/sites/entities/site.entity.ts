@@ -26,7 +26,7 @@ export class Site {
   language: string;
 
   @OneToMany(() => Page, (page) => page.site, {
-    cascade: ['insert', 'update'],
+    cascade: true,
     onDelete: 'CASCADE',
   })
   pages: Page[];

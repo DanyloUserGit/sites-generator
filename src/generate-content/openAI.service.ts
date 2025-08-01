@@ -8,7 +8,6 @@ export class OpenAIService {
   constructor(private readonly config: AppConfigService) {
     this.openai = new OpenAI({ apiKey: config.config.openai_key });
   }
-  // aiRole = "You are an SEO copywriter"
   async generateField({
     aiRole,
     fieldPrompt,
@@ -69,5 +68,25 @@ export class OpenAIService {
     } catch (error) {
       throw error;
     }
+  }
+  async generateSvg({ companyName }: { companyName: string }): Promise<string> {
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `Generate a unique, modern, and creative favicon in clean SVG code for the company named:
+          ${companyName}
+          The logo should go beyond just displaying the company name on a plain background — create an interesting and visually appealing design that reflects the company’s industry, values, or brand personality.
+          Use balanced shapes, subtle symbolism, and a harmonious color palette suitable for digital and print use.
+          The logo must be scalable, simple yet memorable, and convey professionalism and creativity.
+          Return ONLY the raw SVG code, without any additional text, explanations, or wrappers.
+          Do NOT include the data:image/svg+xml;utf8, prefix — I will add it myself if needed.
+          Ensure the SVG is valid and optimized for web usage.`,
+        },
+      ],
+      temperature: 0.5,
+    });
+    return response.choices[0].message.content?.trim();
   }
 }
