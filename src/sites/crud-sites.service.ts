@@ -34,28 +34,87 @@ export class CrudSitesService {
     try {
       await this.siteRepository.update(id, updates);
       return await this.getSite(id);
-    } catch (error) {}
+    } catch (error) {
+      throw error;
+    }
+  }
+  async updateSitePageTab(id: string, tab: string, updates: any) {
+    try {
+      if (tab === 'seo') {
+        const seo = await this.pageSeoRepository.findOne({
+          where: { page: { id } },
+        });
+
+        if (!seo) throw new NotFoundException('SEO not found');
+
+        await this.pageSeoRepository.update(seo.id, updates);
+
+        return seo;
+      }
+      if (tab === 'content') {
+        const content = await this.pageContentRepository.findOne({
+          where: { page: { id } },
+        });
+
+        if (!content) throw new NotFoundException('Content not found');
+
+        await this.pageContentRepository.update(content.id, updates);
+      }
+      if (tab === 'structure') {
+        const page = await this.pageRepository.findOne({
+          where: { id },
+        });
+
+        if (!page) throw new NotFoundException('Page not found');
+
+        await this.pageRepository.update(id, updates);
+      }
+    } catch (error) {
+      throw error;
+    }
   }
   //loadEagerRelations:true
   async deleteSite(id: string): Promise<void> {
-    const site = await this.siteRepository.findOne({
-      where: { id },
-      relations: ['pages', 'pages.content', 'pages.seo'],
-    });
+    const site = await this.siteRepository.findOneBy({ id });
 
     if (!site) throw new NotFoundException(`Site with id ${id} not found`);
 
-    (site.pages.map(async (page) => {
-      const fullPage = await this.pageRepository.findOne({
-        where: { id: page.id },
-        relations: ['seo', 'content'],
+    await this.siteRepository.remove(site);
+  }
+
+  async getSitePages(id: string) {
+    try {
+      const site = await this.siteRepository.findOne({
+        where: { id },
+        relations: ['pages'],
       });
-      if (fullPage) {
-        await this.pageSeoRepository.remove(fullPage.seo);
-        await this.pageContentRepository.remove(fullPage.content);
-        await this.pageRepository.remove(fullPage);
+      return site.pages;
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getSitePageTab(id: string, tab: string) {
+    try {
+      if (tab === 'seo') {
+        const seo = await this.pageSeoRepository.findOne({
+          where: { page: { id } },
+        });
+        return seo;
       }
-    }),
-      await this.siteRepository.remove(site));
+      if (tab === 'content') {
+        const content = await this.pageContentRepository.findOne({
+          where: { page: { id } },
+        });
+        return content;
+      }
+      if (tab === 'structure') {
+        const page = await this.pageRepository.findOne({
+          where: { id },
+        });
+        return page.sections;
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 }

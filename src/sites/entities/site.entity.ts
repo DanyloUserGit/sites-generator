@@ -34,15 +34,25 @@ export class Site {
   @Column({ type: 'text', nullable: true })
   slug: string;
 
+  @Column({ type: 'text', default: '/contact#form' })
+  heroCtaUrl: string;
+
   @Column({ type: 'text', nullable: true })
   favIcon: string;
 
   @Column({ type: 'simple-array', nullable: true })
   usedUnsplashIds: string[];
 
+  @Column({ type: 'simple-json', nullable: true })
+  navigation: Navigation[];
+
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
+}
+export class Navigation {
+  slug: string;
+  linkName: string;
 }

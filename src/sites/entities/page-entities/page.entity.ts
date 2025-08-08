@@ -26,17 +26,13 @@ export class Page {
   @OneToOne(() => PageSeo, (seo) => seo.page, {
     cascade: true,
     eager: true,
-    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'seo_id' })
   seo: PageSeo;
 
   @OneToOne(() => PageContent, (content) => content.page, {
     cascade: true,
     eager: true,
-    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'content_id' })
   content: PageContent;
 
   @Column({ type: 'text' })
@@ -44,6 +40,9 @@ export class Page {
 
   @Column({ length: 255 })
   pageName: string;
+
+  @Column('jsonb', { nullable: true })
+  sections: string[];
 
   @UpdateDateColumn()
   updatedAt: Date;

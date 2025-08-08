@@ -1,4 +1,6 @@
+import Form from '@/components/ui/deployment/Form';
 import LeftNav from '@/components/ui/edit/LeftNav';
+import Layout from '@/components/ui/edit/pages-edit/Layout';
 import Typography from '@/components/ui/Typography';
 import Head from 'next/head';
 
@@ -12,7 +14,12 @@ export default function DeploymentPage() {
       </Head>
       <div className="bg-neutral-900 min-h-screen py-8 px-16">
         <Typography variant="title">Deployment</Typography>
-        <LeftNav />
+        <div className="flex gap-[12px]">
+          <LeftNav />
+          <Layout>
+            <Form />
+          </Layout>
+        </div>
       </div>
     </>
   );

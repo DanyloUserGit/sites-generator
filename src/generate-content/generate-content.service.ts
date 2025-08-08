@@ -9,7 +9,7 @@ import { PromptPageContent } from './entities/page-entities/prompt-page-content.
 import { PromptPageSeo } from './entities/page-entities/prompt-page-seo.entity';
 import { PromptSite } from './entities/prompt-site.entity';
 import { OpenAIService } from './openAI.service';
-import { HugoFreshFivePages } from 'src/types';
+import { BlockType, HugoFreshFivePages, PageName } from 'src/types';
 import { RedisService } from 'src/redis/redis.service';
 import { UnsplashService } from 'src/unsplash/unsplash.service';
 import { MapboxService } from 'src/mapbox/mapbox.service';
@@ -50,6 +50,26 @@ export class GenerateContentService {
       ...data,
     });
   }
+  private cleanSchemaOrg(raw: string): Record<string, any> {
+    let cleaned = raw.trim();
+
+    cleaned = cleaned.replace(/^```(?:html|json)?\n?/i, '');
+
+    cleaned = cleaned.replace(/```$/i, '');
+
+    cleaned = cleaned
+      .replace(/<script[^>]*>/gi, '')
+      .replace(/<\/script>/gi, '');
+
+    cleaned = cleaned.trim();
+
+    try {
+      return JSON.parse(cleaned);
+    } catch (err) {
+      console.error('❌ Cleaned schemaOrg is invalid JSON:', cleaned);
+      throw new Error('SchemaOrg parsing failed: ' + err.message);
+    }
+  }
   private async generateSiteInfo(siteId: string) {
     try {
       const sitePrompt = await this.promptSiteRepository.findOneBy({});
@@ -76,6 +96,8 @@ export class GenerateContentService {
       const encoded = encodeURIComponent(svg);
       const dataUrl = `data:image/svg+xml;utf8,${encoded}`;
       site.favIcon = dataUrl;
+      const nav = await this.openAIService.generateNavigation(site.language);
+      site.navigation = nav;
       return await this.siteRepository.save(site);
     } catch (error) {
       throw error;
@@ -107,16 +129,17 @@ export class GenerateContentService {
       throw error;
     }
   }
-  private async generatePage(siteId: string, pageName: string) {
+  private async generatePage(siteId: string, pageName: PageName) {
     try {
       const site = await this.siteRepository.findOne({ where: { id: siteId } });
-
+      const pageStructure = await this.generatePageStructure(pageName);
       const pageSlug = '/' + pageName.toLowerCase().replaceAll(' ', '-');
       const page = this.pageRepository.create({
         site,
         pageName,
         slug: pageSlug,
       });
+      page.sections = pageStructure;
       const savedPage = await this.pageRepository.save(page);
       await this.generatePageSeo(savedPage.id);
       await this.generatePageContent(savedPage.id);
@@ -140,6 +163,7 @@ export class GenerateContentService {
       if (!page) throw new Error('Page not found');
       const { site } = page;
       if (!site) throw new Error('Site not found');
+
       const pageSeo = await this.pageSeoRepository.findOne({
         where: { id: page.seo.id },
       });
@@ -147,13 +171,47 @@ export class GenerateContentService {
       const pageContent = this.pageContentRepository.create({
         page,
       });
+      if (page.pageName === 'contact') {
+        const findtxt = await this.openAIService.translate(
+          site.language,
+          'Find us here',
+        );
+        const formtxt = await this.openAIService.translate(
+          site.language,
+          'Contact us',
+        );
+        const formNametxt = await this.openAIService.translate(
+          site.language,
+          'Your name',
+        );
+
+        const formMessagetxt = await this.openAIService.translate(
+          site.language,
+          'Message',
+        );
+
+        pageContent.contactMessageText = formMessagetxt;
+        pageContent.contactNameText = formNametxt;
+        pageContent.formText = formtxt;
+        pageContent.findUsText = findtxt;
+      }
       const seoData = `page seo info: metaTitle:${pageSeo.metaTitle}, metaDescription:${pageSeo.metaDescription},
       keywords:${pageSeo.keywords}`;
       const fieldsToGenerate = [
         { fieldName: 'heroTitle', prompt: contentPrompt.heroTitle },
         { fieldName: 'heroDescription', prompt: contentPrompt.heroDescription },
         { fieldName: 'heroCtaText', prompt: contentPrompt.heroCta },
+        { fieldName: 'ctaDescription', prompt: contentPrompt.ctaDescription },
+        { fieldName: 'benefitsTitle', prompt: contentPrompt.benefitsTitle },
         { fieldName: 'benefits', prompt: contentPrompt.benefitsList },
+        {
+          fieldName: 'aboutServicesTitle',
+          prompt: contentPrompt.aboutServicesTitle,
+        },
+        {
+          fieldName: 'aboutServicesDescription',
+          prompt: contentPrompt.aboutServicesDescription,
+        },
         { fieldName: 'formText', prompt: contentPrompt.formText },
       ];
       for (const field of fieldsToGenerate) {
@@ -220,8 +278,16 @@ export class GenerateContentService {
         if (!seoRes) {
           throw new Error(`${field.fieldName} generation failed`);
         }
-
-        pageSeo[field.fieldName] = seoRes;
+        if (field.fieldName === 'schemaOrg') {
+          try {
+            const cleaned = this.cleanSchemaOrg(seoRes);
+            pageSeo.schemaOrg = cleaned;
+          } catch (err) {
+            throw new Error(`SchemaOrg parsing failed: ${err.message}`);
+          }
+        } else {
+          pageSeo[field.fieldName] = seoRes;
+        }
       }
 
       await this.pageSeoRepository.save(pageSeo);
@@ -352,5 +418,26 @@ export class GenerateContentService {
   async generateFaviconSvg(companyName: string): Promise<string> {
     const logo = await this.openAIService.generateSvg({ companyName });
     return logo.replaceAll('```svg', '').replaceAll('```', '');
+  }
+  private async generatePageStructure(
+    pageName: PageName,
+  ): Promise<BlockType[]> {
+    try {
+      switch (pageName) {
+        case 'home':
+          return ['Hero', 'Benefits', 'CTA'];
+        case 'contact':
+          return ['Hero', 'Contact', 'Map'];
+        case 'blog':
+          return ['Hero', 'Services', 'Benefits'];
+        case 'about':
+          return ['Hero', 'Benefits', 'CTA'];
+        case 'services':
+          return ['Hero', 'Services'];
+        default:
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 }

@@ -16,6 +16,7 @@ import { GenerateContentModule } from './generate-content/generate-content.modul
 import { RedisModule } from './redis/redis.module';
 import { UnsplashModule } from './unsplash/unsplash.module';
 import { MapboxModule } from './mapbox/mapbox.module';
+import { TemplateModule } from './template/template.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { MapboxModule } from './mapbox/mapbox.module';
     RedisModule,
     UnsplashModule,
     MapboxModule,
+    TemplateModule,
   ],
   providers: [
     {

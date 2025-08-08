@@ -18,7 +18,19 @@ export class PromptPageContent {
   heroCta: string;
 
   @Column({ type: 'text', nullable: true })
+  ctaDescription: string;
+
+  @Column({ type: 'text', nullable: true })
+  benefitsTitle: string;
+
+  @Column({ type: 'text', nullable: true })
   benefitsList: string;
+
+  @Column({ type: 'text', nullable: true })
+  aboutServicesTitle: string;
+
+  @Column({ type: 'text', nullable: true })
+  aboutServicesDescription: string;
 
   @Column({ type: 'text', nullable: true })
   formText: string;

@@ -11,6 +11,7 @@ import { AppConfigService } from '../config/config.service';
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({
         type: 'postgres',
+        schema: 'public',
         host: config.database.host,
         port: config.database.port,
         username: config.database.username,
@@ -18,10 +19,9 @@ import { AppConfigService } from '../config/config.service';
         database: config.database.name,
         autoLoadEntities: true,
         synchronize: true,
+        migrations: ['src/migrations/*.ts'],
       }),
     }),
   ],
 })
 export class DatabaseModule {}
-
-

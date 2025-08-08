@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -15,6 +16,7 @@ export class PageSeo {
   @OneToOne(() => Page, (page) => page.seo, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'page_id' })
   page: Page;
 
   @Column({ type: 'text', nullable: true })

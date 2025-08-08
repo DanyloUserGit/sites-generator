@@ -16,6 +16,7 @@ export class PageContent {
   @OneToOne(() => Page, (page) => page.content, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'page_id' })
   page: Page;
 
   @Column({ type: 'text', nullable: true })
@@ -28,10 +29,28 @@ export class PageContent {
   heroCtaText: string;
 
   @Column({ type: 'text', nullable: true })
-  heroCtaUrl: string;
+  ctaDescription: string;
+
+  @Column({ type: 'text', nullable: true })
+  findUsText: string;
+
+  @Column({ type: 'text', nullable: true })
+  contactNameText: string;
+
+  @Column({ type: 'text', nullable: true })
+  contactMessageText: string;
+
+  @Column({ type: 'text', nullable: true })
+  benefitsTitle: string;
 
   @Column({ type: 'jsonb', nullable: true })
   benefits: string[];
+
+  @Column({ type: 'jsonb', nullable: true })
+  aboutServicesTitle: string[];
+
+  @Column({ type: 'jsonb', nullable: true })
+  aboutServicesDescription: string[];
 
   @Column({ type: 'text', nullable: true })
   formText: string;

@@ -1,16 +1,26 @@
 import { SiteExtended } from '@/types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Typography from '../../Typography';
 import Button from '../../Button';
+import ImgFile from '../../ImgFile';
+import { useSearchParams } from 'next/navigation';
+import { useAuth } from '@/hooks/AuthContext';
+import { baseUrl } from '@/utils';
+import Loader from '../../loader/Loader';
 
 export default function Form({ site }: { site: SiteExtended }) {
   const [formData, setFormData] = useState(site);
+  const token = useAuth();
+  const params = useSearchParams();
+  const id = params.get('id');
+  const [loader, setLoader] = useState(false);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
 
     if (name === 'favIcon' && files && files[0]) {
       const reader = new FileReader();
       reader.onload = () => {
+        console.log('File loaded:', reader.result);
         setFormData((prev) => ({ ...prev, favIcon: reader.result as string }));
       };
       reader.readAsDataURL(files[0]);
@@ -18,68 +28,94 @@ export default function Form({ site }: { site: SiteExtended }) {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+  const applyChanges = async () => {
+    setLoader(true);
+    if (!formData) return;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/sites/site/${id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        console.error('Update failed');
+        return;
+      }
+
+      setLoader(false);
+    } catch (error) {
+      console.error('Request error:', error);
+    }
+  };
 
   return (
-    <div className="flex-1 mt-4 p-3 bg-neutral-800 text-white rounded-xl shadow">
-      <form className="grid gap-4">
-        <InputField label="ID" name="id" value={formData.id} disabled />
-        <Typography variant="text">Need to generate with changes</Typography>
-        <InputField
-          label="Company Name"
-          name="companyName"
-          value={formData.companyName}
-          onChange={handleChange}
-        />
-        <InputField
-          label="City"
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-        />
-        <InputField
-          label="Language"
-          name="language"
-          value={formData.language}
-          onChange={handleChange}
-        />
-        <InputField
-          label="Services"
-          name="services"
-          value={formData.services}
-          onChange={handleChange}
-        />
-        <Typography variant="text">No need to generate</Typography>
-        <InputField
-          label="Slug"
-          name="slug"
-          value={formData.slug}
-          onChange={handleChange}
-        />
-        <div className="flex flex-col gap-2">
-          <label htmlFor="favIcon" className="text-sm text-neutral-200">
-            Favicon
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            name="favIcon"
-            id="favIcon"
-            onChange={handleChange}
-            className="bg-neutral-700 border border-neutral-600 text-white rounded-lg px-3 py-2"
-          />
-          {formData.favIcon && (
-            <img
-              src={formData.favIcon}
-              alt="Favicon Preview"
-              className="w-16 h-16 mt-2 rounded border"
+    <>
+      {loader ? (
+        <Loader />
+      ) : (
+        <div className=" p-3 bg-neutral-800 text-white rounded-xl shadow">
+          <form className="grid gap-4">
+            <InputField label="ID" name="id" value={formData.id} disabled />
+            {/* <Typography variant="text">
+          Need to generate again with changes
+        </Typography> */}
+            <InputField
+              label="Company Name"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleChange}
             />
-          )}
+            <InputField
+              label="City"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+            />
+            <InputField
+              label="Language"
+              name="language"
+              value={formData.language}
+              onChange={handleChange}
+            />
+            <InputField
+              label="Services"
+              name="services"
+              value={formData.services}
+              onChange={handleChange}
+            />
+            {/* <Typography variant="text">No need to generate again</Typography> */}
+            <InputField
+              label="CTA URL"
+              name="heroCtaUrl"
+              value={formData.heroCtaUrl || '/home#form'}
+              onChange={handleChange}
+            />
+            <InputField
+              label="Slug"
+              name="slug"
+              value={formData.slug}
+              onChange={handleChange}
+            />
+            <label htmlFor="favIcon" className="text-sm text-neutral-200">
+              Favicon
+            </label>
+            <ImgFile handleChange={handleChange} formData={formData} />
+            <Button
+              className="text-black"
+              variant="action"
+              onClick={applyChanges}
+            >
+              Apply changes
+            </Button>
+          </form>
         </div>
-        <Button className="text-black" variant="action" onClick={() => {}}>
-          Apply changes
-        </Button>
-      </form>
-    </div>
+      )}
+    </>
   );
 }
 

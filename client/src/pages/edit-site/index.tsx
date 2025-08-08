@@ -1,5 +1,7 @@
 import From from '@/components/ui/edit/info-edit/Form';
 import LeftNav from '@/components/ui/edit/LeftNav';
+import Layout from '@/components/ui/edit/pages-edit/Layout';
+import Loader from '@/components/ui/loader/Loader';
 import Typography from '@/components/ui/Typography';
 import { useAuth } from '@/hooks/AuthContext';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';
@@ -23,7 +25,6 @@ export default function EditSite() {
       .then((res) => res.json())
       .then((data) => {
         setSite(data);
-        console.log(data);
       });
   }, [id, token]);
   return (
@@ -37,7 +38,7 @@ export default function EditSite() {
         <Typography variant="title">Edit Site Info</Typography>
         <div className="flex gap-[12px]">
           <LeftNav />
-          {site ? <From site={site} /> : ''}
+          <Layout>{site ? <From site={site} /> : <Loader />}</Layout>
         </div>
       </div>
     </>

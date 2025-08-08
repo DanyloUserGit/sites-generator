@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import DashboardItem from './DashboardItem';
 import Header from './Header';
 import { useAuth } from '@/hooks/AuthContext';
+import Loader from '../loader/Loader';
 
 export default function Dashboard() {
   const PAGE_SIZE = 5;
@@ -11,8 +12,10 @@ export default function Dashboard() {
   const [sites, setSites] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [loader, setLoader] = useState(false);
   const token = useAuth();
   useEffect(() => {
+    setLoader(true);
     fetch(`${baseUrl}/api/sites?page=${page}&limit=${PAGE_SIZE}`, {
       headers: { Authorization: `Bearer ${token.token}` },
     })
@@ -20,6 +23,7 @@ export default function Dashboard() {
       .then((data) => {
         setSites(data.data);
         setTotalPages(data.totalPages);
+        setLoader(false);
       });
   }, [page, token]);
 
@@ -65,7 +69,7 @@ export default function Dashboard() {
             )}
           </>
         ) : (
-          ''
+          loader && <Loader />
         )}
       </>
     </div>

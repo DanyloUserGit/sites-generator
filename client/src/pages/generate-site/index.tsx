@@ -7,6 +7,7 @@ import Head from 'next/head';
 import { baseUrl } from '@/utils';
 import StatusBlock from '@/components/ui/status/StatusBlock';
 import { Status } from '@/types';
+import Spin from '@/components/ui/loader/Spin';
 
 export default function GenerateSitePage() {
   const searchParams = useSearchParams();
@@ -92,7 +93,9 @@ export default function GenerateSitePage() {
       </Head>
 
       <div className="bg-neutral-900 min-h-screen py-8 px-16">
-        <Typography variant="title">Generation</Typography>
+        <div className="flex gap-2">
+          <Typography variant="title">Generating</Typography>
+        </div>
 
         <div className="mt-[24px] w-full px-[16px] py-[8px] bg-neutral-700">
           <Typography variant="text">Status Logs: </Typography>

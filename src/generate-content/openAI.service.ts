@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 import { AppConfigService } from 'src/config/config.service';
+import { HugoFreshFivePages, Navigation } from 'src/types';
 
 @Injectable()
 export class OpenAIService {
@@ -64,6 +65,53 @@ export class OpenAIService {
         ],
         temperature: 0.5,
       });
+      return response.choices[0].message.content?.trim();
+    } catch (error) {
+      throw error;
+    }
+  }
+  async generateNavigation(siteLang: string) {
+    try {
+      const navValues = Object.values(HugoFreshFivePages);
+
+      const navigation = await Promise.all(
+        navValues.map(async (nav) => {
+          const response = await this.openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: `Translate: ${nav}. Lang: "${siteLang}".`,
+              },
+            ],
+            temperature: 0.5,
+          });
+
+          return {
+            slug: `/${nav}`,
+            linkName: response.choices[0].message.content?.trim(),
+          };
+        }),
+      );
+
+      return navigation;
+    } catch (error) {
+      throw error;
+    }
+  }
+  async translate(siteLang: string, text: string) {
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `Translate: ${text}. Lang: "${siteLang}".`,
+          },
+        ],
+        temperature: 0.5,
+      });
+
       return response.choices[0].message.content?.trim();
     } catch (error) {
       throw error;

@@ -46,4 +46,21 @@ export class SitesController {
   async deleteSite(@Param('id') id: string) {
     return await this.crudSitesService.deleteSite(id);
   }
+
+  @Get('site-pages/:id')
+  async getSitePages(@Param('id') id: string) {
+    return await this.crudSitesService.getSitePages(id);
+  }
+  @Get('site-page-tab/:id')
+  async getSitePageTab(@Param('id') id: string, @Query('tab') tab: string) {
+    return await this.crudSitesService.getSitePageTab(id, tab);
+  }
+  @Put('site-page-tab/:id')
+  async updateSitePageTab(
+    @Param('id') id: string,
+    @Query('tab') tab: string,
+    @Body() updates: any,
+  ) {
+    return await this.crudSitesService.updateSitePageTab(id, tab, updates);
+  }
 }

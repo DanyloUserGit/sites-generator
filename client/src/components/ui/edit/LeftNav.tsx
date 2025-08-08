@@ -1,10 +1,9 @@
+import { useAuth } from '@/hooks/AuthContext';
+import { baseUrl } from '@/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Typography from '../Typography';
-import { usePathname } from 'next/navigation';
 import Button from '../Button';
-import { baseUrl } from '@/utils';
-import { useAuth } from '@/hooks/AuthContext';
+import Typography from '../Typography';
 
 export default function LeftNav() {
   const router = useRouter();
@@ -52,7 +51,16 @@ export default function LeftNav() {
             <Typography variant="text">Deployment</Typography>
           </Link>
         </li>
-        <li className="mt-[24px] pr-2">
+        <li className="mt-[24px] pr-2 flex flex-col gap-2">
+          <Button
+            onClick={() => {
+              router.replace('/');
+            }}
+            variant="action"
+          >
+            Dashboard
+          </Button>
+
           <Button variant="danger" onClick={() => deleteSite(id)}>
             Delete site
           </Button>

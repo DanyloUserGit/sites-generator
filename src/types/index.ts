@@ -3,6 +3,10 @@ export interface SiteData {
   services: string;
   language: string;
 }
+export interface Navigation {
+  slug: string;
+  linkName: string;
+}
 export const HugoFreshFivePages = {
   Home: 'home',
   About: 'about',
@@ -13,3 +17,10 @@ export const HugoFreshFivePages = {
 
 export type PageName =
   (typeof HugoFreshFivePages)[keyof typeof HugoFreshFivePages];
+export type BlockType =
+  | 'Hero'
+  | 'Services'
+  | 'Benefits'
+  | 'CTA'
+  | 'Contact'
+  | 'Map';

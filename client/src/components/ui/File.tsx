@@ -20,7 +20,7 @@ export default function File({
   useEffect(() => {
     if (!fileRef) {
       setFileName(null);
-      setInputKey((prev) => prev + 1); // force re-mount input
+      setInputKey((prev) => prev + 1); 
     }
   }, [fileRef]);
 
