@@ -10,7 +10,7 @@ export default function Hero({
 }) {
   return (
     <section className="bg-white py-24 text-center max-w-7xl mx-auto px-6">
-      <h1 className="text-5xl font-extrabold text-navy mb-6">
+      <h1 className="text-3xl font-extrabold text-navy mb-6">
         {content.heroTitle}
       </h1>
       <p className="text-lg text-gray-dark max-w-3xl mx-auto mb-8">
