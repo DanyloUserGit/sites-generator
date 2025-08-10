@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Typography from '@/components/ui/Typography';
-import Head from 'next/head';
-import { baseUrl } from '@/utils';
 import StatusBlock from '@/components/ui/status/StatusBlock';
+import Typography from '@/components/ui/Typography';
 import { Status } from '@/types';
-import Spin from '@/components/ui/loader/Spin';
+import { baseUrl } from '@/utils';
+import Head from 'next/head';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function GenerateSitePage() {
   const searchParams = useSearchParams();

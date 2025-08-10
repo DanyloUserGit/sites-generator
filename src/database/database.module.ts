@@ -18,7 +18,7 @@ import { AppConfigService } from '../config/config.service';
         password: config.database.password,
         database: config.database.name,
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: true,
         migrations: ['src/migrations/*.ts'],
       }),
     }),

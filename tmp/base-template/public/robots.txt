@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://haarmeister-berlin.com/
+
+# Sitemaps
+Sitemap: https://haarmeister-berlin.com/sitemap.xml

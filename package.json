@@ -58,6 +58,7 @@
     "@nestjs/testing": "^10.0.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/express": "^5.0.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.2",
     "@types/multer": "^2.0.0",
     "@types/node": "^20.3.1",
