@@ -19,6 +19,7 @@ export default function ContactPage({ page, site }: PageProps) {
         city={site.city}
         websiteUrl={`https://${site.slug.replaceAll('/', '')}.com/`}
         schemaOrg={page.seo.schemaOrg}
+        favicon={site.favIcon}
       />
 
       <Header navigation={site.navigation} site={site} />

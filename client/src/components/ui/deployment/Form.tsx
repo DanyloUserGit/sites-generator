@@ -44,7 +44,11 @@ export default function Deployment() {
         if (!res.ok) throw new Error('Failed to fetch status');
 
         const data = await res.json();
-        if (data?.status && data.status.trim() !== '') {
+        if (
+          data?.status &&
+          data.status.trim() !== '' &&
+          data.status.includes('%')
+        ) {
           setIsBuilding(true);
         }
       } catch (err) {
@@ -62,7 +66,10 @@ export default function Deployment() {
 
     try {
       const res = await fetch(`${baseUrl}/api/template/${siteId}`);
-      if (!res.ok) throw new Error('Failed to start build');
+      if (!res.ok) {
+        setIsBuilding(false);
+        throw new Error('Failed to start build');
+      }
       const data = await res.json();
       if (res.ok) setSiteUrl(data.siteUrl);
     } catch (err) {

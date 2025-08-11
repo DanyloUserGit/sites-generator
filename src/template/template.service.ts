@@ -116,24 +116,25 @@ export class TemplateService {
       await fs.remove(targetDir);
       await fs.mkdirp(targetDir);
       await fs.copy(outputDir, targetDir);
-
       await this.updateGenerationStatus(
         siteId,
         '98% - Starting the site server',
       );
       const port = await this.templateDeployService.startSite(slug);
-
       await this.updateGenerationStatus(
         siteId,
         '100% - Build&Deploy completed',
       );
 
+      await fs.remove(tmpDir);
       return { siteUrl: `${host}:${port}` };
     } catch (error) {
       await this.updateGenerationStatus(
         siteId,
         `Failed to generate site: ${error}`,
       );
+      const tmpDir = path.join(process.cwd(), 'tmp');
+      await fs.remove(tmpDir);
       throw error;
     }
   }

@@ -1,4 +1,4 @@
-import Head from "next/head";
+import Head from 'next/head';
 interface SeoProps {
   title: string;
   description: string;
@@ -8,6 +8,7 @@ interface SeoProps {
   phone?: string;
   websiteUrl?: string;
   schemaOrg?: Record<string, unknown>;
+  favicon: string;
 }
 
 const Seo = ({
@@ -19,29 +20,31 @@ const Seo = ({
   phone,
   websiteUrl,
   schemaOrg,
+  favicon,
 }: SeoProps) => {
   const structuredData = schemaOrg
     ? schemaOrg
     : businessName && city
-    ? {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        name: businessName,
-        address: {
-          "@type": "PostalAddress",
-          addressLocality: city,
-          addressCountry: "DE",
-        },
-        telephone: phone || undefined,
-        url: websiteUrl || canonicalUrl,
-      }
-    : null;
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'LocalBusiness',
+          name: businessName,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: city,
+            addressCountry: 'DE',
+          },
+          telephone: phone || undefined,
+          url: websiteUrl || canonicalUrl,
+        }
+      : null;
 
   return (
     <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonicalUrl} />
+      <link rel="icon" type="image/svg+xml" href={favicon} />
       {structuredData && (
         <script
           type="application/ld+json"

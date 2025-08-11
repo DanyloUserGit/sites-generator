@@ -40,7 +40,12 @@ export function getPageByName(name: string): Page {
   if (!found) {
     throw new Error(`Page with slug "${name}" not found`);
   }
-
+  const page = {
+    ...found,
+    sections: Array.isArray(found.sections)
+      ? found.sections
+      : JSON.parse(found.sections || '[]'),
+  };
   const content = {
     ...found.content,
     benefits: Array.isArray(found.content.benefits)
@@ -59,7 +64,7 @@ export function getPageByName(name: string): Page {
   };
 
   return {
-    ...found,
+    ...page,
     content,
   };
 }
