@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Button from '../Button';
 import Typography from '../Typography';
+import { useState } from 'react';
+import Modal from '../Modal';
 
 export default function LeftNav() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function LeftNav() {
   const pathname = router.pathname;
   const token = useAuth();
   const isActive = (path: string) => pathname === path;
+  const [openDelete, setOpenDelete] = useState(false);
 
   if (!id || typeof id !== 'string') return null;
 
@@ -61,11 +64,14 @@ export default function LeftNav() {
             Dashboard
           </Button>
 
-          <Button variant="danger" onClick={() => deleteSite(id)}>
+          <Button variant="danger" onClick={() => setOpenDelete(true)}>
             Delete site
           </Button>
         </li>
       </ul>
+      {openDelete && (
+        <Modal setOpen={setOpenDelete} deleteSite={() => deleteSite(id)} />
+      )}
     </div>
   );
 }

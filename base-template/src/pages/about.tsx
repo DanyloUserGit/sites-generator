@@ -7,6 +7,9 @@ import Footer from '@/components/Footer';
 import { PageProps } from '@/types';
 import { GetStaticProps } from 'next';
 import { getPageByName, getSiteData } from '@/lib/siteData';
+import Features from '@/components/Features';
+import ContactForm from '@/components/Contact/ContactForm';
+import Map from '@/components/Contact/Map';
 
 export default function AboutPage({ page, site }: PageProps) {
   return (
@@ -28,11 +31,20 @@ export default function AboutPage({ page, site }: PageProps) {
           case 'Hero':
             return <Hero key="hero" content={page.content} />;
 
-          case 'Benefits':
+          case 'Services':
             return <Values key="benefits" content={page.content} />;
+
+          case 'Benefits':
+            return <Features key="benefits" content={page.content} />;
 
           case 'CTA':
             return <Team key="cta" site={site} content={page.content} />;
+
+          case 'Contact':
+            return <ContactForm key="contact" content={page.content} />;
+
+          case 'Map':
+            return <Map key="map" site={site} content={page.content} />;
 
           default:
             return null;

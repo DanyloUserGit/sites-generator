@@ -8,6 +8,10 @@ import { PageProps } from '@/types';
 import { GetStaticProps } from 'next';
 import { getPageByName, getSiteData } from '@/lib/siteData';
 import Link from 'next/link';
+import ContactForm from '@/components/Contact/ContactForm';
+import Features from '@/components/Features';
+import CTA from '@/components/CTA';
+import Map from '@/components/Contact/Map';
 
 export default function ServicesPage({ page, site }: PageProps) {
   return (
@@ -33,6 +37,18 @@ export default function ServicesPage({ page, site }: PageProps) {
 
             case 'Services':
               return <ServicesGrid key="services" content={page.content} />;
+
+            case 'CTA':
+              return <CTA key="cta" site={site} content={page.content} />;
+
+            case 'Benefits':
+              return <Features key="benefits" content={page.content} />;
+
+            case 'Contact':
+              return <ContactForm key="contact" content={page.content} />;
+
+            case 'Map':
+              return <Map key="map" site={site} content={page.content} />;
 
             default:
               return null;

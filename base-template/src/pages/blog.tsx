@@ -1,6 +1,9 @@
+import Team from '@/components/About/Team';
 import ArticleHero from '@/components/Blog/ArticleHero';
 import BenefitsSection from '@/components/Blog/BenefitsSection';
 import TipsSection from '@/components/Blog/TipsSection';
+import ContactForm from '@/components/Contact/ContactForm';
+import Map from '@/components/Contact/Map';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import Seo from '@/components/Seo';
@@ -35,6 +38,15 @@ export default function BlogPage({ page, site }: PageProps) {
 
             case 'Benefits':
               return <BenefitsSection key="benefits" content={page.content} />;
+
+            case 'CTA':
+              return <Team key="cta" site={site} content={page.content} />;
+
+            case 'Contact':
+              return <ContactForm key="contact" content={page.content} />;
+
+            case 'Map':
+              return <Map key="map" site={site} content={page.content} />;
 
             default:
               return null;

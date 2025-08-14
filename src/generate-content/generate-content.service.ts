@@ -171,30 +171,30 @@ export class GenerateContentService {
       const pageContent = this.pageContentRepository.create({
         page,
       });
-      if (page.pageName === 'contact') {
-        const findtxt = await this.openAIService.translate(
-          site.language,
-          'Find us here',
-        );
-        const formtxt = await this.openAIService.translate(
-          site.language,
-          'Contact us',
-        );
-        const formNametxt = await this.openAIService.translate(
-          site.language,
-          'Your name',
-        );
 
-        const formMessagetxt = await this.openAIService.translate(
-          site.language,
-          'Message',
-        );
+      const findtxt = await this.openAIService.translate(
+        site.language,
+        'Find us here',
+      );
+      const formtxt = await this.openAIService.translate(
+        site.language,
+        'Contact us',
+      );
+      const formNametxt = await this.openAIService.translate(
+        site.language,
+        'Your name',
+      );
 
-        pageContent.contactMessageText = formMessagetxt;
-        pageContent.contactNameText = formNametxt;
-        pageContent.formText = formtxt;
-        pageContent.findUsText = findtxt;
-      }
+      const formMessagetxt = await this.openAIService.translate(
+        site.language,
+        'Message',
+      );
+
+      pageContent.contactMessageText = formMessagetxt;
+      pageContent.contactNameText = formNametxt;
+      pageContent.formText = formtxt;
+      pageContent.findUsText = findtxt;
+
       const seoData = `page seo info: metaTitle:${pageSeo.metaTitle}, metaDescription:${pageSeo.metaDescription},
       keywords:${pageSeo.keywords}`;
       const fieldsToGenerate = [
@@ -404,7 +404,7 @@ export class GenerateContentService {
         },
         relations: ['content', 'site'],
       });
-      if (page.pageName != HugoFreshFivePages.Contact) return;
+      // if (page.pageName != HugoFreshFivePages.Contact) return;
       const mapImgUrl = await this.mapboxService.getCityMapImage(
         page.site.city,
       );

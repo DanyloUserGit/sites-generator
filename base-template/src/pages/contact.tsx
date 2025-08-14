@@ -7,6 +7,9 @@ import Footer from '@/components/Footer';
 import { GetStaticProps } from 'next';
 import { PageProps } from '@/types';
 import { getPageByName, getSiteData } from '@/lib/siteData';
+import ServicesGrid from '@/components/Services/ServicesGrid';
+import Features from '@/components/Features';
+import CTA from '@/components/CTA';
 
 export default function ContactPage({ page, site }: PageProps) {
   return (
@@ -33,6 +36,15 @@ export default function ContactPage({ page, site }: PageProps) {
 
           case 'Map':
             return <Map key="map" site={site} content={page.content} />;
+
+          case 'Services':
+            return <ServicesGrid key="services" content={page.content} />;
+
+          case 'Benefits':
+            return <Features key="benefits" content={page.content} />;
+
+          case 'CTA':
+            return <CTA key="cta" site={site} content={page.content} />;
 
           default:
             return null;

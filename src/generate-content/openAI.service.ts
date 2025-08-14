@@ -106,7 +106,7 @@ export class OpenAIService {
         messages: [
           {
             role: 'system',
-            content: `Translate: ${text}. Lang: "${siteLang}".`,
+            content: `Translate: ${text}. IMPORTANT JUST TRANSLATE THE WORD AND do NOT add ANYTHING Lang: "${siteLang}".  `,
           },
         ],
         temperature: 0.5,

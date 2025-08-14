@@ -1,3 +1,4 @@
+import ServicesGrid from '@/components/Services/ServicesGrid';
 import CTA from '../components/CTA';
 import Features from '../components/Features';
 import Footer from '../components/Footer';
@@ -8,6 +9,8 @@ import Header from './../components/Header';
 import { getPageByName, getSiteData } from '@/lib/siteData';
 import { PageProps } from '@/types/';
 import { GetStaticProps } from 'next';
+import ContactForm from '@/components/Contact/ContactForm';
+import Map from '@/components/Contact/Map';
 
 export default function Home({ page, site }: PageProps) {
   return (
@@ -35,6 +38,14 @@ export default function Home({ page, site }: PageProps) {
 
             case 'CTA':
               return <CTA key="cta" site={site} content={page.content} />;
+            case 'Services':
+              return <ServicesGrid key="services" content={page.content} />;
+
+            case 'Contact':
+              return <ContactForm key="contact" content={page.content} />;
+
+            case 'Map':
+              return <Map key="map" site={site} content={page.content} />;
 
             default:
               return null;
