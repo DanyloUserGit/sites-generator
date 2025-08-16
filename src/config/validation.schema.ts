@@ -7,6 +7,8 @@ export const validationSchema = Joi.object({
   OPENAI_KEY: Joi.string().required(),
   UNSPLASH_ACCESS_KEY: Joi.string().required(),
   MAPBOX_TOKEN: Joi.string().required(),
+  VERCEL_ACCESS_TOKEN: Joi.string().required(),
+  CLOUDFLARE_TOKEN: Joi.string().required(),
 
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().default(5432),

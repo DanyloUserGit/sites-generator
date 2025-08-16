@@ -11,6 +11,8 @@ export class AppConfigService {
       port: this.configService.get<number>('PORT', 3000),
       jwt_secret: this.configService.get<string>('JWT_SECRET'),
       openai_key: this.configService.get<string>('OPENAI_KEY'),
+      vercel_token: this.configService.get<string>('VERCEL_ACCESS_TOKEN'),
+      cloudflare_token: this.configService.get<string>('CLOUDFLARE_TOKEN'),
       unsplash_access_key: this.configService.get<string>(
         'UNSPLASH_ACCESS_KEY',
       ),

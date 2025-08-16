@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { Page } from './page-entities/page.entity';
 
@@ -33,6 +34,9 @@ export class Site {
 
   @Column({ type: 'text', nullable: true })
   slug: string;
+
+  @Column({ type: 'text', nullable: true })
+  deployUrl: string;
 
   @Column({ type: 'text', default: '/contact#form' })
   heroCtaUrl: string;

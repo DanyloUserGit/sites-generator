@@ -17,6 +17,7 @@ import { RedisModule } from './redis/redis.module';
 import { UnsplashModule } from './unsplash/unsplash.module';
 import { MapboxModule } from './mapbox/mapbox.module';
 import { TemplateModule } from './template/template.module';
+import { DeploymentModule } from './deployment/deployment.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { TemplateModule } from './template/template.module';
     UnsplashModule,
     MapboxModule,
     TemplateModule,
+    DeploymentModule,
   ],
   providers: [
     {

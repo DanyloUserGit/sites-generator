@@ -1,7 +1,11 @@
+import { ServerType } from 'typeorm';
+
 export interface AppConfig {
   port: number;
   jwt_secret: string;
   openai_key: string;
+  vercel_token: string;
+  cloudflare_token: string;
   unsplash_access_key: string;
   mapbox_token: string;
   database: {
