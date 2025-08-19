@@ -29,8 +29,8 @@ export class OpenAIService {
     siteCity: string;
     companyName: string;
     seoData?: string;
-    domain: string;
-    fieldName: string;
+    domain?: string;
+    fieldName?: string;
   }): Promise<string> {
     const response = await this.openai.chat.completions.create({
       model: 'gpt-4o',
