@@ -21,7 +21,7 @@ export default function Deployment() {
     if (!siteId) return;
     const getSiteUrl = async () => {
       try {
-        const res = await fetch(`${baseUrl}/api/template/host/${siteId}`, {
+        const res = await fetch(`${baseUrl}/api/deployment/url/${siteId}`, {
           cache: 'no-store',
         });
         if (!res.ok) throw new Error('Failed to fetch status');

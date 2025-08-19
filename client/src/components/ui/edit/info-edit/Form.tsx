@@ -88,6 +88,12 @@ export default function Form({ site }: { site: SiteExtended }) {
               value={formData.services}
               onChange={handleChange}
             />
+            <InputField
+              label="Domain"
+              name="domain"
+              value={formData.domain}
+              onChange={handleChange}
+            />
             {/* <Typography variant="text">No need to generate again</Typography> */}
             <InputField
               label="CTA URL"

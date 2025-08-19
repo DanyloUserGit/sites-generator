@@ -7,9 +7,13 @@ import { Site } from './entities/site.entity';
 import { SitesController } from './sites.controller';
 import { SitesService } from './sites.service';
 import { CrudSitesService } from './crud-sites.service';
+import { DeploymentModule } from 'src/deployment/deployment.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Site, Page, PageSeo, PageContent])],
+  imports: [
+    TypeOrmModule.forFeature([Site, Page, PageSeo, PageContent]),
+    DeploymentModule,
+  ],
   providers: [SitesService, CrudSitesService],
   controllers: [SitesController],
   exports: [SitesService],

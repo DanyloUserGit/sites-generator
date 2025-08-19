@@ -5,6 +5,7 @@ export interface Site {
   city: string;
   services: string;
   language: string;
+  domain: string;
   createdAt: string;
 }
 export interface Page {

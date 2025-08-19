@@ -7,6 +7,7 @@ import { ExcludeUsedUnsplashIds } from './dto/create-site.dto';
 import { Page } from './entities/page-entities/page.entity';
 import { PageSeo } from './entities/page-entities/page-seo.entity';
 import { PageContent } from './entities/page-entities/page-content.entiy';
+import { DeploymentService } from 'src/deployment/deployment.service';
 
 @Injectable()
 export class CrudSitesService {
@@ -19,6 +20,8 @@ export class CrudSitesService {
     private readonly pageSeoRepository: Repository<PageSeo>,
     @InjectRepository(PageContent)
     private readonly pageContentRepository: Repository<PageContent>,
+
+    private readonly deploymentService: DeploymentService,
   ) {}
 
   async getSite(id: string) {
@@ -73,12 +76,12 @@ export class CrudSitesService {
       throw error;
     }
   }
-  //loadEagerRelations:true
   async deleteSite(id: string): Promise<void> {
     const site = await this.siteRepository.findOneBy({ id });
 
     if (!site) throw new NotFoundException(`Site with id ${id} not found`);
 
+    await this.deploymentService.deleteSiteWithVercel(id);
     await this.siteRepository.remove(site);
   }
 

@@ -8,6 +8,7 @@ import {
   OneToOne,
 } from 'typeorm';
 import { Page } from './page-entities/page.entity';
+import { SiteStatus } from 'src/types';
 
 @Entity({ name: 'sites' })
 export class Site {
@@ -37,6 +38,18 @@ export class Site {
 
   @Column({ type: 'text', nullable: true })
   deployUrl: string;
+
+  @Column({ type: 'text', nullable: true })
+  siteUrl: string;
+
+  @Column({ type: 'text', default: 'Inactive' })
+  siteStatus: SiteStatus;
+
+  @Column({ type: 'text', nullable: true })
+  domain: string;
+
+  @Column({ type: 'text', nullable: true })
+  projectId: string;
 
   @Column({ type: 'text', default: '/contact#form' })
   heroCtaUrl: string;

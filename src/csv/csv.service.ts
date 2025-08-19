@@ -28,6 +28,7 @@ export class CsvService {
               city: data.city.trim(),
               services: data.services.trim(),
               language: data.language.trim(),
+              domain: data.domain.trim(),
             });
           })
           .on('end', () => resolve(rows[0]))

@@ -10,6 +10,9 @@ export class CreateSiteDTO {
 
   @IsString()
   language: string;
+
+  @IsString()
+  domain: string;
 }
 
 export class Id {

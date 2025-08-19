@@ -9,5 +9,6 @@ import { DeploymentService } from './deployment.service';
   imports: [TypeOrmModule.forFeature([Site]), AppConfigModule],
   providers: [DeploymentService],
   controllers: [DeploymentController],
+  exports: [DeploymentService],
 })
 export class DeploymentModule {}

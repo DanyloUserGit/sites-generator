@@ -14,21 +14,23 @@ export default function BusinessForm({
 }) {
   const [city, setCity] = useState('');
   const [services, setServices] = useState('');
+  const [domain, setDomain] = useState('');
   const [language, setLanguage] = useState<string | null>(null);
   const token = useAuth();
   const [errors, setErrors] = useState<{
     city?: string;
     services?: string;
     language?: string;
+    domain?: string;
   }>({});
   const router = useRouter();
   useEffect(() => {
-    if (city.length || services.length || language) {
+    if (city.length || services.length || language || domain.length) {
       setShowFile(false);
     } else {
       setShowFile(true);
     }
-  }, [city, services, language]);
+  }, [city, services, language, domain]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -36,6 +38,7 @@ export default function BusinessForm({
     if (!city.trim()) newErrors.city = 'City is required';
     if (!services.trim()) newErrors.services = 'Services are required';
     if (!language) newErrors.language = 'Language is required';
+    if (!language) newErrors.domain = 'Domain is required';
 
     setErrors(newErrors);
 
@@ -51,7 +54,7 @@ export default function BusinessForm({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token.token}`,
         },
-        body: JSON.stringify({ city, services, language }),
+        body: JSON.stringify({ city, services, language, domain }),
       });
 
       if (!response.ok) {
@@ -114,7 +117,23 @@ export default function BusinessForm({
           <p className="text-danger text-sm mt-1">{errors.language}</p>
         )}
       </div>
-
+      <div className="flex flex-col">
+        <label htmlFor="domain" className="text-neutral-200 text-sm mb-1">
+          Domain<span className="text-danger">*</span>
+        </label>
+        <input
+          id="domain"
+          type="text"
+          required
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
+          placeholder="Enter domain"
+          className="bg-neutral-700 text-neutral-100 placeholder-neutral-400 rounded-lg px-4 py-2 border border-neutral-500 focus:outline-none focus:border-primary-light transition-colors duration-300"
+        />
+        {errors.domain && (
+          <p className="text-danger text-sm mt-1">{errors.domain}</p>
+        )}
+      </div>
       <div className="flex gap-[4px] w-full">
         <Button
           className="flex-1"

@@ -10,21 +10,17 @@ import { execAsync } from 'src/utils';
 import { Repository } from 'typeorm';
 import { StaticSitesService } from './template-deploy.service';
 import { RedisService } from 'src/redis/redis.service';
+import { DeploymentService } from 'src/deployment/deployment.service';
 
 @Injectable()
 export class TemplateService {
   constructor(
     @InjectRepository(Site)
     private readonly siteRepository: Repository<Site>,
-    @InjectRepository(Page)
-    private readonly pageRepository: Repository<Page>,
-    @InjectRepository(PageSeo)
-    private readonly pageSeoRepository: Repository<PageSeo>,
-    @InjectRepository(PageContent)
-    private readonly pageContentRepository: Repository<PageContent>,
 
     private readonly templateDeployService: StaticSitesService,
     private readonly redisService: RedisService,
+    private readonly deploymentService: DeploymentService,
   ) {}
   private async updateGenerationStatus(siteId: string, status: string) {
     await this.redisService.set(`site-status:${siteId}`, status);
@@ -116,18 +112,15 @@ export class TemplateService {
       await fs.remove(targetDir);
       await fs.mkdirp(targetDir);
       await fs.copy(outputDir, targetDir);
-      await this.updateGenerationStatus(
-        siteId,
-        '98% - Starting the site server',
-      );
-      const port = await this.templateDeployService.startSite(slug);
+      await this.updateGenerationStatus(siteId, '98% - Deploying');
+      await this.deploymentService.deploySite(siteId);
       await this.updateGenerationStatus(
         siteId,
         '100% - Build&Deploy completed',
       );
 
       await fs.remove(tmpDir);
-      return { siteUrl: `${host}:${port}` };
+      return { siteUrl: data.siteUrl };
     } catch (error) {
       await this.updateGenerationStatus(
         siteId,
@@ -135,20 +128,6 @@ export class TemplateService {
       );
       const tmpDir = path.join(process.cwd(), 'tmp');
       await fs.remove(tmpDir);
-      throw error;
-    }
-  }
-  async getSiteHost(siteId: string, host: string): Promise<string | null> {
-    try {
-      const site = await this.siteRepository.findOne({
-        where: { id: siteId },
-      });
-      if (!site) throw new NotFoundException('Site not found');
-      const port = this.templateDeployService.getSitePort(site.slug);
-      if (!port) return null;
-
-      return `${host}:${port}`;
-    } catch (error) {
       throw error;
     }
   }

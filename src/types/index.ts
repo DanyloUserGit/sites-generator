@@ -2,6 +2,7 @@ export interface SiteData {
   city: string;
   services: string;
   language: string;
+  domain: string;
 }
 export interface Navigation {
   slug: string;
@@ -24,3 +25,5 @@ export type BlockType =
   | 'CTA'
   | 'Contact'
   | 'Map';
+
+export type SiteStatus = 'Inactive' | 'Updating' | 'Ready';
