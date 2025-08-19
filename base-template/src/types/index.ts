@@ -54,6 +54,7 @@ export interface Site {
   updatedAt: string;
   navigation: NavLink[];
   pages: Page[];
+  domain: string;
 }
 const HugoFreshFivePages = {
   Home: 'home',

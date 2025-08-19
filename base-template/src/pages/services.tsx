@@ -19,10 +19,10 @@ export default function ServicesPage({ page, site }: PageProps) {
       <Seo
         title={page.seo.metaTitle}
         description={page.seo.metaDescription}
-        canonicalUrl={`https://${site.slug.replaceAll('/', '')}.com/`}
+        canonicalUrl={`https://${site.domain}/`}
         businessName={site.companyName}
         city={site.city}
-        websiteUrl={`https://${site.slug.replaceAll('/', '')}.com/`}
+        websiteUrl={`https://${site.domain}/`}
         schemaOrg={page.seo.schemaOrg}
         favicon={site.favIcon}
       />
