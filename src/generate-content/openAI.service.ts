@@ -18,6 +18,8 @@ export class OpenAIService {
     siteCity,
     companyName,
     seoData,
+    domain,
+    fieldName,
   }: {
     aiRole: string;
     fieldPrompt: string;
@@ -27,13 +29,15 @@ export class OpenAIService {
     siteCity: string;
     companyName: string;
     seoData?: string;
+    domain: string;
+    fieldName: string;
   }): Promise<string> {
     const response = await this.openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: `${aiRole}. ${fieldPrompt} for page: "${page}". ${seoData ? seoData : ''}
+          content: `${aiRole}. ${fieldPrompt} for page: "${page}". ${fieldName === 'schemaOrg' ? `For domain: ${domain}` : ''} ${seoData ? seoData : ''}
            Company: "${companyName}". Company services: "${siteServices}". Company city: "${siteCity}". Site lang: "${siteLang}".`,
         },
       ],

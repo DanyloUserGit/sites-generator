@@ -273,6 +273,8 @@ export class GenerateContentService {
           siteLang: site.language,
           siteServices: site.services,
           companyName: site.companyName,
+          domain: site.domain,
+          fieldName: field.fieldName,
         });
 
         if (!seoRes) {
