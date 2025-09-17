@@ -8,10 +8,11 @@ import { SitesController } from './sites.controller';
 import { SitesService } from './sites.service';
 import { CrudSitesService } from './crud-sites.service';
 import { DeploymentModule } from 'src/deployment/deployment.module';
+import { RelumeSite } from 'src/generate-from-relume/entities/relume-site.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Site, Page, PageSeo, PageContent]),
+    TypeOrmModule.forFeature([Site, Page, PageSeo, PageContent, RelumeSite]),
     DeploymentModule,
   ],
   providers: [SitesService, CrudSitesService],

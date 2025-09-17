@@ -1,14 +1,18 @@
 import Header from '@/components/Header';
 import Dashboard from '@/components/ui/dashboard/Dashboard';
+import Dropdown from '@/components/ui/Dropdown';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 import { getToken, removeToken } from '@/lib/auth';
+import { SiteMethod, siteMethods } from '@/types';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   const router = useRouter();
   useAuthRedirect();
+
+  const [label, setLabel] = useState<SiteMethod>('All websites');
 
   useEffect(() => {
     if (!getToken()) router.push('/login');
@@ -24,7 +28,17 @@ export default function Home() {
       </Head>
       <div className="bg-neutral-900 min-h-screen py-8 px-16">
         <Header />
-        <Dashboard />
+        <Dropdown
+          label={label}
+          items={[
+            ...siteMethods.map((it) => ({
+              label: it,
+              value: it,
+            })),
+          ]}
+          onSelect={setLabel}
+        />
+        <Dashboard label={label} />
       </div>
     </>
   );

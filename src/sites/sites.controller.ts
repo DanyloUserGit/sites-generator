@@ -27,6 +27,14 @@ export class SitesController {
     return await this.sitesService.getSitesByPage(page, limit);
   }
 
+  @Get('get-all')
+  async getAllSites(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+  ) {
+    return await this.sitesService.getSites(page, limit);
+  }
+
   @Post('create-from-input')
   async createFromInput(@Body() body: CreateSiteDTO) {
     return await this.sitesService.createSite(body);

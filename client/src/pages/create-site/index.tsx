@@ -18,6 +18,11 @@ export default function CreateSite() {
   const [showFile, setShowFile] = useState(true);
   const [showForm, setShowForm] = useState(true);
 
+  const [city, setCity] = useState('');
+  const [services, setServices] = useState('');
+  const [domain, setDomain] = useState('');
+  const [language, setLanguage] = useState<string | null>(null);
+
   useEffect(() => {
     if (file) {
       setShowForm(false);
@@ -62,12 +67,26 @@ export default function CreateSite() {
         <div className="flex flex-col items-center gap-[16px]">
           {showFile && (
             <File
+              format=".csv"
+              text="Click or drag CSV file"
               fileRef={file}
               onFileChange={(selectedFile) => setFile(selectedFile)}
             />
           )}
           {showFile && showForm && <Typography variant="text">Or</Typography>}
-          {showForm && <BusinessForm setShowFile={setShowFile} />}
+          {showForm && (
+            <BusinessForm
+              city={city}
+              language={language}
+              services={services}
+              domain={domain}
+              setCity={setCity}
+              setDomain={setDomain}
+              setLanguage={setLanguage}
+              setServices={setServices}
+              setShowFile={setShowFile}
+            />
+          )}
           {!showForm && (
             <div className="flex gap-[4px] w-full">
               <Button
@@ -86,6 +105,24 @@ export default function CreateSite() {
                 Create
               </Button>
             </div>
+          )}
+          {showFile && showForm && (
+            <>
+              <div className="border-b-[1px] border-[#fff] w-full" />
+              <Button
+                className="flex-1"
+                variant="action"
+                onClick={() => router.push('relume-create')}
+              >
+                Create with relume{' '}
+                <img
+                  src={
+                    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAATlSURBVHgB1Vfva1tVGH5OtnYJzQ2xm42lst5o/SLUpRXcQDAp/kpLNxMcOOhkqSjYTW0KguAHmyD4Tdsi+EWlyT9g4xcNMmj0qx9WJ0zUQu6cFelcE7qmSdvkvr7ntkmTNjFJ6xAfuNzk3HPO+5z3xznPAf5jCBwA5BsaR0H3oQC3rh/BurD9sEbWmc74pxE0iaYI0AWvB3kxhTy52Djxg7zeIjKwIiNsWCdrMgflld54KNHonA0RoIBXxQZmocODAg/JE2JLy4j+tsRNAs91qPA/6MIaFGTIinXYIndhDg/Gx7RDEaCAzw7k2N0iyKu1s2FK/LkiwjcWkfhrpaLvo8oJfNx/HnZLF2WgCElmA9YQzK0z/pg/3TQBes0b4OV9hDzuk65O5/IIX1/E9C9aqY/dbjfe6fTu/MNd/RjpOQeb5SR7w0YZYb25DiV8Jf5kpCECdHnIBV2f4lWzuwnSeOjaImZ+uon01lap3/j4OEKhkGE8HA4jEtmd/wHLcQx0PQV/z0Vag9XwBueJtgFlIBR3ajUJ0BuDPhB9wcaFjHPijxWMfvcjtLVsqY/H48HU1BRcLlcFcU3TMDo6ikQiUWq739KBsz2XcKrrRZkX0hsiWzjm//AbRwz7Vh70qvSWN0lXvJQccZOns51kc/FRVZXm5+epHmZnZ42+5WN7HW56232V3vXeouBgOhX0kb0agQATILrsJVWxlAZznGlycpJSqRQ1AzlGji3Nw8k58fQNetO7qr86uBks2jWVGJjEC9yVvkwuQ7u763KZaIFAoJRwjUKGij1R+p/OLuHn5av8S3B8j7r3E9ANt4iFO6sVE8nYOp1OI77ydz0Uc2FgYAALCwsV39K5W1xYJtIJ9v0Etp1FxrsKZJZLIjLjq6FYDX19fRUVIatl14aR86I890175qm7M8rSk0Si0WipLRaLGYaLZSkhQ5BMJhEMBivWqO8xebTSvOAqRF1IN8u8mJ6eNnKjvPRk3LkSDALFvrsEhPHUJqAb5hs+oMpjLIkUN6faYAKiFgHd+C7EAQ7oouG6lSI9vCcE5WVoBKmREOyFz+drqEy35xbs6GoEZCvt5Ok9AhnGRcUSm66CwxHYtmEStQncY+xUQdUQgIwC7lYs+LcgS7B84zqhPCYJ8EmB9H4CdCQhGfq6HVAPSaLarigFitMxLAtBVlpsP4GjrVFO05S9tQXzQ0/Ad9KBg6Darqi2n8FLp+dkCcrVa6xxvi32rxQkYyxICjQnVRBLMUR+XTJkWLkgqQbWCcZbrrp8V2y3dOJ87wfUedwt1kiqIgVb4pj/869FrCoBg8TrrIC3MM8EVIMIy+/Q9UUR1ZagZaoTkdtuueG2ljY80+3Hsz1jhlEp2VktJ7Im88QnX1krjsjaojTAonQLk7xDqtIbUiNINRxhKf5POKc+D9/DI0QtDr4v8F1BKFqG2sLvx52Rav3ry/JcTkry9/gR0iMyHP7vr2FhtVI39Lc/hIushh9p79teNZTUOqwzd8zmmVCsr3lZXkHkAodlk72RxyXoQhAT+ez32zS3fFsU+DgZYil+puPxomG+ISmxrDBPjMYHtXpzN3c1G+arGWFWL5jULNr4JmTbMWo13lmhJDKkhM/GX040OueBtt5N71Bgg5RxltmnmITICmuC74WR0/F3ovi/4W8b3IlLfA09WgAAAABJRU5ErkJggg=='
+                  }
+                  alt="relume"
+                />
+              </Button>
+            </>
           )}
         </div>
       </div>

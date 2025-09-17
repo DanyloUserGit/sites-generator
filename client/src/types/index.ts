@@ -55,3 +55,10 @@ export type BlockType =
   | 'CTA'
   | 'Contact'
   | 'Map';
+export const siteMethods = [
+  'All websites',
+  'Relume',
+  'Default template',
+] as const;
+
+export type SiteMethod = (typeof siteMethods)[number];

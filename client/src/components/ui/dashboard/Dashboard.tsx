@@ -1,4 +1,4 @@
-import { Site } from '@/types';
+import { Site, SiteMethod } from '@/types';
 import { baseUrl } from '@/utils';
 import { useEffect, useState } from 'react';
 import DashboardItem from './DashboardItem';
@@ -6,7 +6,7 @@ import Header from './Header';
 import { useAuth } from '@/hooks/AuthContext';
 import Loader from '../loader/Loader';
 
-export default function Dashboard() {
+export default function Dashboard({ label }: { label: SiteMethod }) {
   const PAGE_SIZE = 5;
 
   const [sites, setSites] = useState([]);
@@ -16,16 +16,40 @@ export default function Dashboard() {
   const token = useAuth();
   useEffect(() => {
     setLoader(true);
-    fetch(`${baseUrl}/api/sites?page=${page}&limit=${PAGE_SIZE}`, {
-      headers: { Authorization: `Bearer ${token.token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setSites(data.data);
-        setTotalPages(data.totalPages);
-        setLoader(false);
-      });
-  }, [page, token]);
+    if (label === 'Default template') {
+      fetch(`${baseUrl}/api/sites?page=${page}&limit=${PAGE_SIZE}`, {
+        headers: { Authorization: `Bearer ${token.token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setSites(data.data);
+          setTotalPages(data.totalPages);
+          setLoader(false);
+        });
+    }
+    if (label === 'Relume') {
+      fetch(`${baseUrl}/api/generate-from-relume?page=${page}`, {
+        headers: { Authorization: `Bearer ${token.token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setSites(data.data);
+          setTotalPages(data.totalPages);
+          setLoader(false);
+        });
+    }
+    if (label === 'All websites') {
+      fetch(`${baseUrl}/api/sites/get-all?page=${page}&limit=${PAGE_SIZE}`, {
+        headers: { Authorization: `Bearer ${token.token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setSites(data.data);
+          setTotalPages(data.totalPages);
+          setLoader(false);
+        });
+    }
+  }, [page, token, label]);
 
   return (
     <div className="mt-12 flex flex-col">

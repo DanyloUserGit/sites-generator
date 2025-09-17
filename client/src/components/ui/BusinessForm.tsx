@@ -9,13 +9,27 @@ import { useAuth } from '@/hooks/AuthContext';
 
 export default function BusinessForm({
   setShowFile,
+  showButtons = true,
+  city,
+  setCity,
+  services,
+  setServices,
+  language,
+  setLanguage,
+  domain,
+  setDomain,
 }: {
-  setShowFile: (s: boolean) => void;
+  setShowFile?: (s: boolean) => void;
+  showButtons?: boolean;
+  city: string;
+  setCity: (s: string) => void;
+  services: string;
+  setServices: (s: string) => void;
+  language: string | null;
+  setLanguage: (s: string | null) => void;
+  domain: string;
+  setDomain: (s: string) => void;
 }) {
-  const [city, setCity] = useState('');
-  const [services, setServices] = useState('');
-  const [domain, setDomain] = useState('');
-  const [language, setLanguage] = useState<string | null>(null);
   const token = useAuth();
   const [errors, setErrors] = useState<{
     city?: string;
@@ -25,12 +39,13 @@ export default function BusinessForm({
   }>({});
   const router = useRouter();
   useEffect(() => {
+    if (!setShowFile) return;
     if (city.length || services.length || language || domain.length) {
       setShowFile(false);
     } else {
       setShowFile(true);
     }
-  }, [city, services, language, domain]);
+  }, [city, services, language, domain, setShowFile]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -134,23 +149,25 @@ export default function BusinessForm({
           <p className="text-danger text-sm mt-1">{errors.domain}</p>
         )}
       </div>
-      <div className="flex gap-[4px] w-full">
-        <Button
-          className="flex-1"
-          onClick={() => {
-            router.back();
-          }}
-        >
-          Back
-        </Button>
-        <Button
-          className="flex-1"
-          variant="action"
-          onClick={handleCreateFromInput}
-        >
-          Create
-        </Button>
-      </div>
+      {showButtons && (
+        <div className="flex gap-[4px] w-full">
+          <Button
+            className="flex-1"
+            onClick={() => {
+              router.back();
+            }}
+          >
+            Back
+          </Button>
+          <Button
+            className="flex-1"
+            variant="action"
+            onClick={handleCreateFromInput}
+          >
+            Create
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

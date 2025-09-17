@@ -1,11 +1,10 @@
+import { useAuth } from '@/hooks/AuthContext';
 import { SiteExtended } from '@/types';
-import { useEffect, useState } from 'react';
-import Typography from '../../Typography';
+import { baseUrl } from '@/utils';
+import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import Button from '../../Button';
 import ImgFile from '../../ImgFile';
-import { useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks/AuthContext';
-import { baseUrl } from '@/utils';
 import Loader from '../../loader/Loader';
 
 export default function Form({ site }: { site: SiteExtended }) {

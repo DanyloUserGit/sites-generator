@@ -27,3 +27,16 @@ export type BlockType =
   | 'Map';
 
 export type SiteStatus = 'Inactive' | 'Updating' | 'Ready';
+
+export interface CsvRow {
+  Page: string;
+  Section: string;
+  'Section Description': string;
+}
+export interface TransformedSection {
+  page: string;
+  section: string;
+  key: string;
+  prompt: string | null;
+  content: string;
+}

@@ -18,6 +18,7 @@ import { UnsplashModule } from './unsplash/unsplash.module';
 import { MapboxModule } from './mapbox/mapbox.module';
 import { TemplateModule } from './template/template.module';
 import { DeploymentModule } from './deployment/deployment.module';
+import { GenerateFromRelumeModule } from './generate-from-relume/generate-from-relume.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { DeploymentModule } from './deployment/deployment.module';
     MapboxModule,
     TemplateModule,
     DeploymentModule,
+    GenerateFromRelumeModule,
   ],
   providers: [
     {

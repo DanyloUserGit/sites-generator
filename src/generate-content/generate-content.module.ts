@@ -34,5 +34,6 @@ import { MapboxModule } from 'src/mapbox/mapbox.module';
   ],
   controllers: [GenerateContentController],
   providers: [GenerateContentService, ManagePromptsService, OpenAIService],
+  exports: [OpenAIService],
 })
 export class GenerateContentModule {}

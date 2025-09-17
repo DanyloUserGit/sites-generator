@@ -4,9 +4,13 @@ import Clip from '../svg/Clip';
 export default function File({
   onFileChange,
   fileRef,
+  text,
+  format,
 }: {
   onFileChange: (file: File | null) => void;
   fileRef: File | null;
+  text: string;
+  format: string;
 }) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [inputKey, setInputKey] = useState(0);
@@ -20,7 +24,7 @@ export default function File({
   useEffect(() => {
     if (!fileRef) {
       setFileName(null);
-      setInputKey((prev) => prev + 1); 
+      setInputKey((prev) => prev + 1);
     }
   }, [fileRef]);
 
@@ -35,16 +39,14 @@ export default function File({
         ) : (
           <>
             <Clip />
-            <span className="text-neutral-200 text-sm">
-              Click or drag CSV file
-            </span>
+            <span className="text-neutral-200 text-sm">{text}</span>
           </>
         )}
         <input
           key={inputKey}
           id="file-upload"
           type="file"
-          accept=".csv"
+          accept={format}
           className="hidden"
           onChange={handleFileChange}
         />

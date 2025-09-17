@@ -37,14 +37,20 @@ export class OpenAIService {
       messages: [
         {
           role: 'system',
-          content: `${aiRole}. ${fieldPrompt} for page: "${page}". ${fieldName === 'schemaOrg' ? `For domain: ${domain}` : ''} ${seoData ? seoData : ''}
-           Company: "${companyName}". Company services: "${siteServices}". Company city: "${siteCity}". Site lang: "${siteLang}".`,
+          content: `${aiRole}. ${fieldPrompt} for page: "${page}". ${
+            fieldName === 'schemaOrg' && domain ? `For domain: ${domain}` : ''
+          } ${seoData || ''} ${
+            companyName ? `Company: "${companyName}" ` : ''
+          }. Company services: "${siteServices}". Company city: "${siteCity}". Site lang: "${siteLang}".`,
         },
       ],
       temperature: 0.5,
     });
-    return response.choices[0].message.content?.trim();
+
+    // Використовуємо trim і гарантовано повертаємо рядок
+    return response.choices[0].message.content?.trim() || '';
   }
+
   async generateSiteInfo({
     aiRole,
     fieldPrompt,

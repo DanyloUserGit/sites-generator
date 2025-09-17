@@ -9,15 +9,15 @@ export default function Header() {
   const createNew = () => {
     router.push('/create-site');
   };
-  const handleLogout = () => {
-    removeToken();
-    router.push('/login');
-  };
+  // const handleLogout = () => {
+  //   removeToken();
+  //   router.push('/login');
+  // };
   return (
     <div className="w-full flex justify-between items-center">
-      <div onClick={handleLogout}>
-        <Typography variant="title">All websites</Typography>
-      </div>
+      {/* <div onClick={handleLogout}> */}
+      <Typography variant="title">Websites</Typography>
+      {/* </div> */}
       <Button onClick={createNew}>
         <Typography className="flex gap-[8px] items-center" variant="text">
           <Plus /> Add new

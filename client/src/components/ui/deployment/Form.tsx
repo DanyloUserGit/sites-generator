@@ -73,7 +73,7 @@ export default function Deployment() {
       const data = await res.json();
       if (res.ok) setSiteUrl(data.siteUrl);
     } catch (err) {
-      setLogs([{ status: 'Failed to start build' }]);
+      setLogs([{ status: 'Failed to start build' + err }]);
       setIsBuilding(false);
     }
   };
