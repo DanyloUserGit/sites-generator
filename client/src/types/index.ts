@@ -94,7 +94,7 @@ export interface IRelumePageSeo {
   metaTitle?: string | null;
   metaDescription?: string | null;
   keywords?: string[] | null;
-  schemaOrg?: Record<string, any> | null;
+  schemaOrg?: Record<string, string> | null;
   updatedAt: Date;
 }
 
