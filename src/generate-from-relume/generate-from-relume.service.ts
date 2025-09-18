@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import AdmZip from 'adm-zip';
 import { load } from 'cheerio';
@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { RelumePage } from './entities/relume-page.entity';
 import { RelumeSite } from './entities/relume-site.entity';
 import { Tag } from './entities/tag.entity';
+import { RelumePageSeo } from './entities/relume-page-seo';
 
 @Injectable()
 export class GenerateFromRelumeService {
@@ -19,6 +20,8 @@ export class GenerateFromRelumeService {
     private readonly siteRepo: Repository<RelumeSite>,
     @InjectRepository(RelumePage)
     private readonly pageRepo: Repository<RelumePage>,
+    @InjectRepository(RelumePageSeo)
+    private readonly pageSeoRepo: Repository<RelumePageSeo>,
     @InjectRepository(Tag)
     private readonly tagRepo: Repository<Tag>,
 
@@ -146,11 +149,80 @@ export class GenerateFromRelumeService {
   async getSiteById(id: string) {
     return this.siteRepo.findOne({
       where: { id },
-      relations: ['pages', 'pages.tags'],
+      relations: ['pages', 'pages.tags', 'pages.site'],
     });
   }
 
-  async deleteSite(id: number) {
+  async deleteSite(id: string) {
     return this.siteRepo.delete(id);
+  }
+  async updateSite(id: string, updates: Partial<RelumeSite>) {
+    try {
+      const { id: _, pages, createdAt, updatedAt, ...scalarUpdates } = updates;
+
+      await this.siteRepo.update(id, scalarUpdates);
+      return await this.getSiteById(id);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getSitePages(id: string) {
+    try {
+      const site = await this.siteRepo.findOne({
+        where: { id },
+        relations: ['pages', 'pages.site'],
+      });
+      return site.pages;
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getSitePageTab(id: string, tab: string) {
+    try {
+      if (tab === 'seo') {
+        const seo = await this.pageSeoRepo.findOne({
+          where: { page: { id } },
+        });
+        return seo;
+      }
+      if (tab === 'content') {
+        const content = await this.pageRepo.findOne({
+          where: { id },
+          relations: ['tags'],
+        });
+        return content.tags;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+  async updateSitePageTab(id: string, tab: string, updates: any) {
+    try {
+      if (tab === 'seo') {
+        const seo = await this.pageSeoRepo.findOne({
+          where: { page: { id } },
+        });
+
+        if (!seo) throw new NotFoundException('SEO not found');
+
+        await this.pageSeoRepo.update(seo.id, updates);
+
+        return seo;
+      }
+
+      if (tab === 'content') {
+        const tags: Tag[] = updates;
+        for (const t of tags) {
+          if (t.id) {
+            await this.tagRepo.update(t.id, { value: t.value });
+          } else {
+            const newTag = this.tagRepo.create({ ...t, page: { id } });
+            await this.tagRepo.save(newTag);
+          }
+        }
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 }

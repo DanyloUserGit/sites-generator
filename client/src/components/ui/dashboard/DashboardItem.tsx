@@ -5,17 +5,20 @@ export default function DashboardItem({
   services,
   language,
   createdAt,
+  relume,
   id,
 }: {
   id: string;
   city: string;
   services: string;
   language: string;
+  relume: boolean | undefined;
   createdAt: string;
 }) {
   const router = useRouter();
   const manageSite = () => {
-    router.push(`/edit-site?id=${id}`);
+    if (!relume) router.push(`/edit-site?id=${id}`);
+    if (relume) router.push(`/relume-edit-site?id=${id}`);
   };
   return (
     <div

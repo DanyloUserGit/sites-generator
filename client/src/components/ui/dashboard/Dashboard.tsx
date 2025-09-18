@@ -64,6 +64,7 @@ export default function Dashboard({ label }: { label: SiteMethod }) {
                 city={site.city}
                 services={site.services}
                 language={site.language}
+                relume={site.relume}
                 createdAt={site.createdAt}
               />
             ))}

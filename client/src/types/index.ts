@@ -6,6 +6,7 @@ export interface Site {
   services: string;
   language: string;
   domain: string;
+  relume?: boolean;
   createdAt: string;
 }
 export interface Page {
@@ -62,3 +63,44 @@ export const siteMethods = [
 ] as const;
 
 export type SiteMethod = (typeof siteMethods)[number];
+export interface IRelumeSite {
+  id: string;
+  name: string;
+  companyName?: string | null;
+  city: string;
+  services: string;
+  language: string;
+  deployUrl?: string | null;
+  siteUrl?: string | null;
+  pages: IRelumePage[];
+  domain?: string | null;
+  projectId?: string | null;
+  relume: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IRelumePage {
+  id: string;
+  seo: IRelumePageSeo;
+  name: string;
+  site: IRelumeSite;
+  tags: ITag[];
+}
+
+export interface IRelumePageSeo {
+  id: string;
+  page: IRelumePage;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  keywords?: string[] | null;
+  schemaOrg?: Record<string, any> | null;
+  updatedAt: Date;
+}
+
+export interface ITag {
+  id: string;
+  type: string;
+  value: string;
+  page: IRelumePage;
+}
