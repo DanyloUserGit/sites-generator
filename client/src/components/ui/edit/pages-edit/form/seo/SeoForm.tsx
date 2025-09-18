@@ -7,7 +7,7 @@ import { baseUrl } from '@/utils';
 import { useAuth } from '@/hooks/AuthContext';
 import Loader from '@/components/ui/loader/Loader';
 
-export default function SeoForm({ relume = false }: { relume: boolean }) {
+export default function SeoForm({ relume = false }: { relume?: boolean }) {
   const searchParams = useSearchParams();
   const id = searchParams.get('page_id');
   const tab = searchParams.get('tab');
