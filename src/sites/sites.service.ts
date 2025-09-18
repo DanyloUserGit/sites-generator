@@ -36,17 +36,31 @@ export class SitesService {
     }
   }
 
-  async getSites(page = 1, limit = 5, withTotal = false) {
-    const [data, count] = await this.siteRepo.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
+  async getSites(page = 1, limit = 10, withTotal = false) {
+    const halfLimit = Math.ceil(limit / 2);
+
+    const skip = (page - 1) * halfLimit;
+
+    const [data, count] = await this.siteRepository.findAndCount({
+      skip,
+      take: halfLimit,
     });
 
+    const [relumedata, relumecount] = await this.siteRepo.findAndCount({
+      skip,
+      take: halfLimit,
+    });
+
+    const combinedData = [...relumedata, ...data];
+
+    const total = count + relumecount;
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      data,
+      data: combinedData,
       page,
-      totalPages: Math.ceil(count / limit),
-      ...(withTotal ? { total: count } : {}),
+      totalPages,
+      ...(withTotal ? { total } : {}),
     };
   }
 
