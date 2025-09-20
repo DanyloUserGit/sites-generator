@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DeploymentModule } from 'src/deployment/deployment.module';
 import { PromptPageSeo } from 'src/generate-content/entities/page-entities/prompt-page-seo.entity';
 import { GenerateContentModule } from 'src/generate-content/generate-content.module';
 import { RelumePageSeo } from './entities/relume-page-seo';
@@ -20,10 +19,10 @@ import { GenerateSeoFromRelumeService } from './generate-seo-from-relume.service
       Tag,
       PromptPageSeo,
     ]),
-    DeploymentModule,
     GenerateContentModule,
   ],
   providers: [GenerateFromRelumeService, GenerateSeoFromRelumeService],
   controllers: [GenerateFromRelumeController],
+  exports: [GenerateFromRelumeService],
 })
 export class GenerateFromRelumeModule {}

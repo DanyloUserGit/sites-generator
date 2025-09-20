@@ -39,3 +39,8 @@ export function extractZoneFromDomain(domain: string): string {
   }
   return result.domain;
 }
+export function validateDomainReceiver(domain: string): boolean {
+  const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,6}$/;
+  const validDomain = domainRegex.test(domain);
+  return validDomain;
+}

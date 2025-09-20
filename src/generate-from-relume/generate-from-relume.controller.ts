@@ -72,4 +72,14 @@ export class GenerateFromRelumeController {
   ) {
     return await this.relumeService.updateSitePageTab(id, tab, updates);
   }
+  @Get('build-site/:id')
+  async buildSite(@Param('id') id: string) {
+    return await this.relumeService.buildSite(id);
+  }
+  @Post('set-home')
+  async setHome(
+    @Body() { siteId, pageId }: { siteId: string; pageId: string },
+  ) {
+    return await this.relumeService.setHomePage(siteId, pageId);
+  }
 }

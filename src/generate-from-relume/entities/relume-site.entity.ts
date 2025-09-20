@@ -17,6 +17,9 @@ export class RelumeSite {
   name: string;
 
   @Column({ type: 'text', nullable: true })
+  homePageId: string;
+
+  @Column({ type: 'text', nullable: true })
   companyName: string;
 
   @Column({ length: 255 })
