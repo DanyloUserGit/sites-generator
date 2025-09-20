@@ -483,7 +483,7 @@ Sitemap: ${baseUrl}/sitemap.xml`;
       }
 
       packageJson.scripts['build:css'] =
-        'npx tailwindcss -i ./src/css/input.css -o ./dist/css/style.css --minify';
+        '/root/.nvm/versions/node/v20.19.4/bin/npx tailwindcss -i ./src/css/input.css -o ./dist/css/style.css --minify';
 
       fs.writeFileSync(
         packageJsonPath,
@@ -543,7 +543,7 @@ module.exports = {
       // --- Build через npx ---
       console.log('Building Tailwind CSS...');
       execSync(
-        'npx tailwindcss -i ./src/css/input.css -o ./dist/css/style.css --minify',
+        '/root/.nvm/versions/node/v20.19.4/bin/npx tailwindcss -i ./src/css/input.css -o ./dist/css/style.css --minify',
         {
           cwd: sitePath,
           stdio: 'inherit',
