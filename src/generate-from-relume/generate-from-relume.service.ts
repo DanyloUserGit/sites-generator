@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Query } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import AdmZip from 'adm-zip';
 import { load } from 'cheerio';
@@ -153,17 +153,6 @@ export class GenerateFromRelumeService {
     });
   }
 
-  async deleteSite(id: string) {
-    const uploadDir = path.join(process.cwd(), 'sites');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    const extractPath = path.join(uploadDir, id);
-    if (fs.existsSync(extractPath)) {
-      fs.rmSync(extractPath, { recursive: true, force: true });
-    }
-    return this.siteRepo.delete(id);
-  }
   async updateSite(id: string, updates: Partial<RelumeSite>) {
     try {
       const { id: _, pages, createdAt, updatedAt, ...scalarUpdates } = updates;
@@ -252,7 +241,29 @@ export class GenerateFromRelumeService {
       .filter((d) => d.isDirectory())
       .map((d) => d.name);
 
+    const rootIndexPath = path.join(sitePath, 'index.html');
+    if (fs.existsSync(rootIndexPath)) {
+      const rootPage = site.pages.find((p) => p.id === site.homePageId);
+
+      if (rootPage) {
+        const html = fs.readFileSync(rootIndexPath, 'utf-8');
+        const dom = new JSDOM(html);
+        const document = dom.window.document;
+
+        const tags = this.generateSeoTags(rootPage);
+        this.updateHeadTags(document, tags);
+        this.generateSitemapAndRobots(site);
+        await this.addTailwind(id);
+        await this.addTailwindLinkToHtml(sitePath);
+        fs.writeFileSync(rootIndexPath, dom.serialize(), 'utf-8');
+      } else {
+        console.warn(`No matching page entity for root index.html`);
+      }
+    }
+
+    // Далі обробка папок
     for (const dir of pageDirs) {
+      if (dir === 'src' || dir === 'node_modules' || dir === 'public') continue;
       const indexPath = path.join(sitePath, dir, 'index.html');
       if (!fs.existsSync(indexPath)) {
         console.warn(`index.html not found in ${dir}`);
@@ -266,6 +277,7 @@ export class GenerateFromRelumeService {
         console.warn(`No matching page entity for folder "${dir}"`);
         continue;
       }
+
       const html = fs.readFileSync(indexPath, 'utf-8');
       const dom = new JSDOM(html);
       const document = dom.window.document;
@@ -274,9 +286,43 @@ export class GenerateFromRelumeService {
       this.updateHeadTags(document, tags);
       this.generateSitemapAndRobots(site);
       await this.addTailwind(id);
+      await this.addTailwindLinkToHtml(sitePath);
       fs.writeFileSync(indexPath, dom.serialize(), 'utf-8');
     }
 
+    const publicPath = path.join(sitePath, 'public');
+    if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath);
+
+    const moveFilesToPublic = (dir: string) => {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+
+        // Пропускаємо заборонені
+        if (
+          entry.name === 'src' ||
+          entry.name === 'node_modules' ||
+          entry.name === 'public' ||
+          entry.name === 'tailwind.config.js' ||
+          entry.name === 'postcss.config.js'
+        ) {
+          continue;
+        }
+
+        const destPath = path.join(publicPath, entry.name);
+
+        if (entry.isDirectory()) {
+          fs.cpSync(fullPath, destPath, { recursive: true });
+          fs.rmSync(fullPath, { recursive: true, force: true });
+        } else if (entry.isFile()) {
+          fs.copyFileSync(fullPath, destPath);
+          fs.unlinkSync(fullPath);
+        }
+      }
+    };
+
+    // Викликаємо після обробки HTML
+    moveFilesToPublic(sitePath);
     return { success: true };
   }
 
@@ -388,9 +434,10 @@ export class GenerateFromRelumeService {
       );
 
       for (const dir of pageDirs) {
-        urlEntries.push(
-          `<url><loc>${baseUrl}/${dir}/</loc><lastmod>${now}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>`,
-        );
+        if (dir !== 'src' && dir !== 'node_modules' && dir !== 'public')
+          urlEntries.push(
+            `<url><loc>${baseUrl}/${dir}/</loc><lastmod>${now}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>`,
+          );
       }
 
       const sitemap0 = `<?xml version="1.0" encoding="UTF-8"?>
@@ -472,81 +519,89 @@ Sitemap: ${baseUrl}/sitemap.xml`;
         throw new Error(`Site folder not found: ${sitePath}`);
       }
 
-      // --- package.json ---
-      const packageJsonPath = path.join(sitePath, 'package.json');
-      let packageJson: any;
-      if (!fs.existsSync(packageJsonPath)) {
-        packageJson = { name: siteId, version: '1.0.0', scripts: {} };
-      } else {
-        packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-        if (!packageJson.scripts) packageJson.scripts = {};
+      // Якщо немає package.json – створюємо
+      if (!fs.existsSync(path.join(sitePath, 'package.json'))) {
+        execSync('npm init -y', {
+          cwd: sitePath,
+          stdio: 'inherit',
+          shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
+        });
       }
 
-      packageJson.scripts['build:css'] =
-        '/root/.nvm/versions/node/v20.19.4/bin/npx tailwindcss -i ./src/css/input.css -o ./dist/css/style.css --minify';
-
-      fs.writeFileSync(
-        packageJsonPath,
-        JSON.stringify(packageJson, null, 2),
-        'utf-8',
+      let tailwindBin = path.join(
+        sitePath,
+        'node_modules',
+        '.bin',
+        process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss',
       );
 
-      // --- Встановлення Tailwind локально ---
-      console.log('Installing Tailwind CSS...');
-      execSync('npm install tailwindcss postcss autoprefixer --save-dev', {
-        cwd: sitePath,
-        stdio: 'inherit',
-      });
+      // Встановлюємо Tailwind, якщо ще немає
+      if (!fs.existsSync(tailwindBin)) {
+        console.log('Installing Tailwind CSS...');
+        execSync('npm install -D tailwindcss@3.3.3 postcss autoprefixer', {
+          cwd: sitePath,
+          stdio: 'inherit',
+          shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
+        });
 
-      // --- Конфіги Tailwind і PostCSS ---
+        tailwindBin = path.join(
+          sitePath,
+          'node_modules',
+          '.bin',
+          process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss',
+        );
+
+        if (!fs.existsSync(tailwindBin)) {
+          throw new Error('Tailwind CLI not found after install');
+        }
+      }
+
+      // Tailwind config
       const tailwindConfig = `/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./**/*.html"],
   theme: { extend: {} },
   plugins: [],
 };`;
-
       fs.writeFileSync(
         path.join(sitePath, 'tailwind.config.js'),
         tailwindConfig,
         'utf-8',
       );
 
+      // PostCSS config
       const postcssConfig = `module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
   },
 };`;
-
       fs.writeFileSync(
         path.join(sitePath, 'postcss.config.js'),
         postcssConfig,
         'utf-8',
       );
 
-      // --- Папка та input.css ---
+      // Вхідний CSS
       const cssFolder = path.join(sitePath, 'src', 'css');
       fs.mkdirSync(cssFolder, { recursive: true });
-
-      const tailwindInputCss = `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-`;
-
       fs.writeFileSync(
         path.join(cssFolder, 'input.css'),
-        tailwindInputCss,
+        '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n',
         'utf-8',
       );
 
-      // --- Build через npx ---
+      // ⚡ Будуємо одразу в public/css, а не dist/
+      const publicCssFolder = path.join(sitePath, 'public', 'css');
+      fs.mkdirSync(publicCssFolder, { recursive: true });
+
       console.log('Building Tailwind CSS...');
       execSync(
-        '/root/.nvm/versions/node/v20.19.4/bin/npx tailwindcss -i ./src/css/input.css -o ./dist/css/style.css --minify',
+        `${tailwindBin} -i ./src/css/input.css -o ./public/css/style.css --minify`,
         {
           cwd: sitePath,
           stdio: 'inherit',
+          shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
         },
       );
 
@@ -558,5 +613,79 @@ module.exports = {
       console.error('Tailwind setup/build error:', error);
       throw error;
     }
+  }
+
+  private async addTailwindLinkToHtml(sitePath: string) {
+    const htmlFiles: string[] = [];
+
+    function findHtmlFiles(dir: string) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          findHtmlFiles(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.html')) {
+          htmlFiles.push(fullPath);
+        }
+      }
+    }
+
+    findHtmlFiles(sitePath);
+
+    for (const filePath of htmlFiles) {
+      let html = fs.readFileSync(filePath, 'utf-8');
+
+      const linkTag = `<link rel="stylesheet" href="/css/style.css">`;
+
+      // Забираємо старі шляхи на ../dist/ чи ./dist/
+      html = html.replace(
+        /<link[^>]+href=["'][^"']*dist\/css\/style\.css["'][^>]*>/g,
+        '',
+      );
+
+      if (!html.includes(linkTag)) {
+        if (html.includes('<head>')) {
+          html = html.replace('<head>', `<head>\n  ${linkTag}`);
+        } else {
+          html = `${linkTag}\n${html}`;
+        }
+        fs.writeFileSync(filePath, html, 'utf-8');
+        console.log(`✅ Added Tailwind link to ${filePath}`);
+      }
+    }
+  }
+
+  async searchPages(
+    siteId: string,
+    query: string,
+  ): Promise<{ name: string; id: string }[]> {
+    try {
+      if (!query || !query.trim()) return [];
+
+      const pages = await this.pageRepo
+        .createQueryBuilder('page')
+        .leftJoin('page.site', 'site')
+        .where('site.id = :siteId', { siteId })
+        .andWhere('page.name ILIKE :query', { query: `%${query}%` })
+        .select(['page.id', 'page.name'])
+        .orderBy('page.name', 'ASC')
+        .limit(3)
+        .getRawMany();
+
+      return pages.map((p) => ({ id: p.page_id, name: p.page_name }));
+    } catch (error) {
+      throw error;
+    }
+  }
+  async deleteSite(id: string) {
+    const uploadDir = path.join(process.cwd(), 'sites');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const extractPath = path.join(uploadDir, id);
+    if (fs.existsSync(extractPath)) {
+      fs.rmSync(extractPath, { recursive: true, force: true });
+    }
+    return this.siteRepo.delete(id);
   }
 }

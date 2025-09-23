@@ -22,6 +22,14 @@ export class GenerateFromRelumeController {
     private readonly generateSeoService: GenerateSeoFromRelumeService,
   ) {}
 
+  @Get('pages/:id')
+  async searchLanguages(
+    @Param('id') id: string,
+    @Query('query') query: string,
+  ) {
+    return this.relumeService.searchPages(id, query);
+  }
+
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async createSite(
@@ -51,11 +59,6 @@ export class GenerateFromRelumeController {
     return await this.relumeService.updateSite(id, updates);
   }
 
-  @Delete(':id')
-  async deleteSite(@Param('id') id: string) {
-    return this.relumeService.deleteSite(id);
-  }
-
   @Get('site-pages/:id')
   async getSitePages(@Param('id') id: string) {
     return await this.relumeService.getSitePages(id);
@@ -81,5 +84,9 @@ export class GenerateFromRelumeController {
     @Body() { siteId, pageId }: { siteId: string; pageId: string },
   ) {
     return await this.relumeService.setHomePage(siteId, pageId);
+  }
+  @Delete(':id')
+  async deleteSite(@Param('id') id: string) {
+    return this.relumeService.deleteSite(id);
   }
 }

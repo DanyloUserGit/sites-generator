@@ -119,27 +119,44 @@ export class DeploymentService {
       'Content-Type': 'application/json',
     };
 
-    const { data: existing } = await axios.get(
-      `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records?name=${name}`,
-      { headers },
-    );
+    console.log(`🔹 Upsert DNS Record: ${type} ${name} → ${content}`);
+    console.log(`Zone ID: ${zoneId}`);
 
-    for (const r of existing.result) {
-      await axios.delete(
-        `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${r.id}`,
+    try {
+      const { data: existing } = await axios.get(
+        `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records?name=${name}`,
         { headers },
       );
-      console.log(`🗑 Видалено ${r.type} запис: ${name}`);
-    }
+      console.log(`📝 Existing records for ${name}:`, existing.result);
 
-    const { data: created } = await axios.post(
-      `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`,
-      { type, name, content, ttl: 1, proxied },
-      { headers },
-    );
-    console.log(`➕ ${type} додано: ${name} → ${content}`);
-    return created.result;
+      for (const r of existing.result) {
+        console.log(
+          `🗑 Deleting existing record: ${r.type} ${r.name} → ${r.content}`,
+        );
+        await axios.delete(
+          `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${r.id}`,
+          { headers },
+        );
+      }
+
+      console.log(`➕ Creating new record: ${type} ${name} → ${content}`);
+      const { data: created } = await axios.post(
+        `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`,
+        { type, name, content, ttl: 1, proxied },
+        { headers },
+      );
+
+      console.log(`✅ Record created successfully:`, created.result);
+      return created.result;
+    } catch (error: any) {
+      console.error(
+        `❌ Error upserting DNS record for ${name}:`,
+        error.response?.data || error.message,
+      );
+      throw error; // кинемо далі, щоб не ігнорувати помилки
+    }
   }
+
   async deploySite(siteId: string) {
     try {
       const site = await this.siteRepo.findOne({ where: { id: siteId } });
@@ -382,21 +399,25 @@ export class DeploymentService {
 
     return data.result.length ? data.result[0].id : null;
   }
-  async relumeDeploySite(siteId: string) {
+  async relumeDeploySite(siteId: string, homeId: string) {
     try {
       const site = await this.relumeSiteRepo.findOne({ where: { id: siteId } });
       if (!site)
-        throw new NotFoundException(`Site with id=${siteId} not found`);
-
+        throw new NotFoundException(`RelumeSite with id=${siteId} not found`);
       if (!site.siteUrl) {
+        if (!site.homePageId)
+          await this.relumeService.setHomePage(siteId, homeId);
         await this.relumeService.buildSite(siteId);
         await this.relumeDeployStaticSite(siteId);
         console.log('Vercel deploy completed');
         return await this.relumeConfigureDomainRecords(siteId);
       }
       await this.relumeSiteRepo.save(site);
+      if (!site.homePageId)
+        await this.relumeService.setHomePage(siteId, homeId);
       await this.relumeService.buildSite(siteId);
-      return await this.relumeDeployStaticSite(siteId);
+      await this.relumeDeployStaticSite(siteId);
+      return await this.relumeConfigureDomainRecords(siteId);
     } catch (error) {
       throw error;
     }
@@ -404,9 +425,8 @@ export class DeploymentService {
 
   async relumeConfigureDomainRecords(siteId: string) {
     const site = await this.relumeSiteRepo.findOne({ where: { id: siteId } });
-    if (!site) throw new NotFoundException(`Site with id=${siteId} not found`);
-
-    // site.siteStatus = 'Updating';
+    if (!site)
+      throw new NotFoundException(`RelumeSite with id=${siteId} not found`);
 
     const zoneId = await this.getZoneId(site.domain);
     if (!zoneId)
@@ -438,17 +458,31 @@ export class DeploymentService {
       }
     }
 
+    // Додаємо TXT записи для верифікації
     if (domainData.verification?.length) {
       for (const v of domainData.verification) {
         if (v.type === 'TXT') {
-          await this.upsertDNSRecord(zoneId, 'TXT', v.domain, v.value, true);
+          console.log(`🔹 Upserting TXT: ${v.domain} = ${v.value}`);
+          await this.upsertDNSRecord(zoneId, 'TXT', v.domain, v.value, false);
         }
       }
     }
 
+    // Додаємо CNAME запис
     const cnameTarget = new URL(site.deployUrl).hostname;
-    await this.upsertDNSRecord(zoneId, 'CNAME', site.domain, cnameTarget, true);
+    console.log(`🔹 Upserting CNAME: ${site.domain} → ${cnameTarget}`);
 
+    // Для apex-домену проксі ставимо false
+    const isApex = site.domain.split('.').length === 2;
+    await this.upsertDNSRecord(
+      zoneId,
+      'CNAME',
+      site.domain,
+      cnameTarget,
+      !isApex,
+    );
+
+    // Після додавання DNS виконуємо верифікацію домену у Vercel
     try {
       await axios.post(
         `https://api.vercel.com/v9/projects/${site.projectId}/domains/${site.domain}/verify`,
@@ -474,13 +508,13 @@ export class DeploymentService {
     return {
       message: 'DNS configured & verification triggered',
       domain: site.domain,
-      url: site.deployUrl,
+      url: site.siteUrl,
     };
   }
 
   async relumeDeleteSiteWithVercel(siteId: string) {
     const site = await this.relumeSiteRepo.findOne({ where: { id: siteId } });
-    if (!site) throw new NotFoundException('Site not found');
+    if (!site) throw new NotFoundException('RelumeSite not found');
 
     if (site.projectId) {
       try {
@@ -501,23 +535,40 @@ export class DeploymentService {
   }
 
   async relumeDeployStaticSite(siteId: string): Promise<string> {
-    console.log('Building Tailwind CSS before deployment...');
-    await this.relumeService.buildSite(siteId);
-
+    const sitePath = path.join(process.cwd(), 'sites', siteId, 'public');
     const site = await this.relumeSiteRepo.findOne({ where: { id: siteId } });
-    if (!site) throw new NotFoundException('Site not found');
+    if (!site) throw new NotFoundException('RelumeSite not found');
 
-    // site.siteStatus = 'Updating';
-
-    const outDir = path.join(process.cwd(), 'sites', site.id); 
+    const outDir = sitePath;
     const projectName = site.id;
 
-    const files = this.collectFiles(outDir);
+    // --- Збір файлів без node_modules та Node.js конфігів ---
+    const collectFiles = (dir: string): string[] => {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      let files: string[] = [];
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (
+          ['node_modules', 'package.json', 'package-lock.json', 'src'].includes(
+            entry.name,
+          )
+        )
+          continue;
+
+        if (entry.isDirectory()) {
+          files = files.concat(collectFiles(fullPath));
+        } else if (entry.isFile()) {
+          files.push(fullPath);
+        }
+      }
+      return files;
+    };
+
+    const files = collectFiles(outDir);
 
     const vercelFiles = files.map((filePath) => {
       const content = fs.readFileSync(filePath);
       const relativePath = path.relative(outDir, filePath).replace(/\\/g, '/');
-
       const isTextFile = /\.(html|css|js|json|txt|xml|svg)$/i.test(
         relativePath,
       );
@@ -548,46 +599,6 @@ export class DeploymentService {
       const vercelUrl = `https://${data.url}`;
       const projectId = data.project.id;
 
-      // Вимкнення пароля, якщо включено
-      try {
-        const { data: pwdData } = await axios.get(
-          `https://api.vercel.com/v9/projects/${projectId}/password`,
-          {
-            headers: {
-              Authorization: `Bearer ${this.vercelToken}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-
-        if (pwdData?.enabled) {
-          await axios.patch(
-            `https://api.vercel.com/v9/projects/${projectId}/password`,
-            { enabled: false },
-            {
-              headers: {
-                Authorization: `Bearer ${this.vercelToken}`,
-                'Content-Type': 'application/json',
-              },
-            },
-          );
-          console.log(
-            `Password protection disabled for project ${projectName}`,
-          );
-        } else {
-          console.log(
-            `Password protection already disabled for project ${projectName}`,
-          );
-        }
-      } catch (authErr) {
-        if (authErr.response?.status !== 404) {
-          console.warn(
-            `Could not check/disable auth for project ${projectName}:`,
-            authErr.response?.data || authErr.message,
-          );
-        }
-      }
-
       site.deployUrl = vercelUrl;
       site.projectId = projectId;
       await this.relumeSiteRepo.save(site);
@@ -598,14 +609,13 @@ export class DeploymentService {
       throw new Error('Vercel deployment failed');
     }
   }
-
   async relumeGetUrl(siteId: string) {
     try {
       const site = await this.relumeSiteRepo.findOne({ where: { id: siteId } });
       if (!site) throw new NotFoundException('Site not found');
 
       const url = site.siteUrl || site.deployUrl || null;
-      return { siteUrl: url };
+      return { siteUrl: url, home: site.homePageId };
     } catch (error) {
       throw error;
     }

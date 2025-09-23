@@ -18,12 +18,18 @@ export default function LeftNav() {
   if (!id || typeof id !== 'string') return null;
 
   const deleteSite = (id: string) => {
-    fetch(`${baseUrl}/api/generate-from-relume/${id}`, {
+    fetch(`${baseUrl}/api/deployment/relume/${id}`, {
       headers: { Authorization: `Bearer ${token.token}` },
       method: 'DELETE',
     }).then((res) => {
       if (!res.ok) alert('Error occured');
-      router.replace('/');
+      fetch(`${baseUrl}/api/generate-from-relume/${id}`, {
+        headers: { Authorization: `Bearer ${token.token}` },
+        method: 'DELETE',
+      }).then((res) => {
+        if (!res.ok) alert('Error occured');
+        router.replace('/');
+      });
     });
   };
 
