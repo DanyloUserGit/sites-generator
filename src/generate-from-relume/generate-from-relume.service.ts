@@ -4,6 +4,7 @@ import AdmZip from 'adm-zip';
 import { load } from 'cheerio';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
+import os from 'os';
 import iconv from 'iconv-lite';
 import { JSDOM } from 'jsdom';
 import * as path from 'path';
@@ -28,11 +29,13 @@ export class GenerateFromRelumeService {
     private readonly tagRepo: Repository<Tag>,
   ) {}
 
-  async createSite(file: Express.Multer.File, body: CreateSiteDTO) {
+  async createSite(
+    userId: string,
+    file: Express.Multer.File,
+    body: CreateSiteDTO,
+  ) {
     const uploadDir = path.join(process.cwd(), 'sites');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
     const { city, services, language, domain } = body;
     if (
@@ -45,9 +48,7 @@ export class GenerateFromRelumeService {
     }
 
     const validDomain = validateDomainReceiver(domain);
-    if (!validDomain) {
-      throw new Error('Invalid domain');
-    }
+    if (!validDomain) throw new Error('Invalid domain');
 
     const fileNameBuffer = Buffer.from(file.originalname, 'binary');
     const decodedName = iconv.decode(fileNameBuffer, 'utf-8');
@@ -56,7 +57,9 @@ export class GenerateFromRelumeService {
     const zipPath = path.join(uploadDir, siteName + '.zip');
     fs.writeFileSync(zipPath, file.buffer);
 
+    // Створюємо запис про сайт
     const site = this.siteRepo.create({
+      userId,
       name: siteName,
       city,
       services,
@@ -78,25 +81,23 @@ export class GenerateFromRelumeService {
     for (const dir of pagesDirs) {
       const pageName = dir.name;
       const pagePath = path.join(extractPath, pageName, 'index.html');
-
       if (!fs.existsSync(pagePath)) continue;
 
       const html = fs.readFileSync(pagePath, 'utf-8');
-      const { updatedHtml, tags } = this.extractTags(html);
+
+      // Створюємо сторінку
+      const page = this.pageRepo.create({ name: pageName, site });
+      await this.pageRepo.save(page);
+
+      const { updatedHtml, tags } = await this.extractTags(html, page);
       fs.writeFileSync(pagePath, updatedHtml);
 
-      const page = this.pageRepo.create({
-        name: pageName,
-        site,
-        tags: tags.map((t) =>
-          this.tagRepo.create({
-            type: t.type,
-            value: t.value,
-          }),
-        ),
-      });
-
-      await this.pageRepo.save(page);
+      // Додаємо position та прив'язку до сторінки і зберігаємо теги окремо
+      for (let i = 0; i < tags.length; i++) {
+        tags[i].page = page;
+        tags[i].position = i + 1; // порядковий номер
+        await this.tagRepo.save(tags[i]);
+      }
     }
 
     return this.siteRepo.findOne({
@@ -105,33 +106,76 @@ export class GenerateFromRelumeService {
     });
   }
 
-  private extractTags(html: string): { updatedHtml: string; tags: Tag[] } {
+  private async extractTags(
+    html: string,
+    page: RelumePage,
+  ): Promise<{ updatedHtml: string; tags: Tag[] }> {
     const $ = load(html);
     const tags: Tag[] = [];
     let tagIndex = 1;
 
-    $('p, h1, h2, h3, h4, h5, h6, span').each((_, el) => {
-      const text = $(el).text().trim();
-      if (text) {
-        const tag = this.tagRepo.create({
-          type: el.tagName.toLowerCase(),
-          value: text,
-        });
-        tags.push(tag);
-        $(el).attr('data-tag-id', String(tagIndex++));
-      }
-    });
+    for (const el of $('p, h1, h2, h3, h4, h5, h6, span, img').toArray()) {
+      let tag: Tag | null = null;
 
-    $('img').each((_, el) => {
-      const src = $(el).attr('src');
-      if (src) {
-        const tag = this.tagRepo.create({ type: 'img', value: src });
-        tags.push(tag);
-        $(el).attr('data-tag-id', String(tagIndex++));
+      if (el.tagName.toLowerCase() === 'img') {
+        const src = $(el).attr('src');
+        if (src) {
+          tag = this.tagRepo.create({
+            type: 'img',
+            value: src,
+            position: tagIndex,
+            page,
+          });
+        }
+      } else {
+        const text = $(el).text().trim();
+        if (text) {
+          tag = this.tagRepo.create({
+            type: el.tagName.toLowerCase(),
+            value: text,
+            position: tagIndex,
+            page,
+          });
+        }
       }
-    });
+
+      if (tag) {
+        const savedTag = await this.tagRepo.save(tag);
+        console.log('TagId: ' + savedTag.id);
+
+        tags.push(savedTag);
+        $(el).attr('data-tag-id', savedTag.id);
+
+        tagIndex++;
+      }
+    }
 
     return { updatedHtml: $.html(), tags };
+  }
+
+  private updateHtmlTags(document: Document, tags: Tag[]) {
+    // сортуємо теги по position
+    // const sorted = tags.sort((a, b) => a.position - b.position);
+    console.log(JSON.stringify(tags));
+    for (const tag of tags) {
+      let el = document.querySelector(`[data-tag-id="${tag.id}"]`);
+
+      if (!el) {
+        // створюємо новий елемент, якщо не існує
+        el = document.createElement(tag.type);
+        el.setAttribute('data-tag-id', tag.id);
+
+        // додаємо в body (або інший контейнер, якщо треба)
+        document.body.appendChild(el);
+        console.log(`➕ Created <${tag.type}> with data-tag-id=${tag.id}`);
+      }
+
+      if (tag.type === 'img') {
+        (el as HTMLImageElement).src = tag.value;
+      } else {
+        el.textContent = tag.value;
+      }
+    }
   }
 
   async getSites(page = 1, limit = 5) {
@@ -186,7 +230,9 @@ export class GenerateFromRelumeService {
         const content = await this.pageRepo.findOne({
           where: { id },
           relations: ['tags'],
+          order: { tags: { position: 'ASC' } },
         });
+
         return content.tags;
       }
     } catch (error) {
@@ -225,7 +271,7 @@ export class GenerateFromRelumeService {
   async buildSite(id: string) {
     const site = await this.siteRepo.findOne({
       where: { id },
-      relations: ['pages', 'pages.seo'],
+      relations: ['pages', 'pages.seo', 'pages.tags'],
     });
     if (!site) {
       throw new Error(`Site with id ${id} not found`);
@@ -252,10 +298,11 @@ export class GenerateFromRelumeService {
 
         const tags = this.generateSeoTags(rootPage);
         this.updateHeadTags(document, tags);
+        this.updateHtmlTags(document, rootPage.tags);
         this.generateSitemapAndRobots(site);
         await this.addTailwind(id);
-        await this.addTailwindLinkToHtml(sitePath);
         fs.writeFileSync(rootIndexPath, dom.serialize(), 'utf-8');
+        await this.addTailwindLinkToHtml(sitePath);
       } else {
         console.warn(`No matching page entity for root index.html`);
       }
@@ -284,21 +331,21 @@ export class GenerateFromRelumeService {
 
       const tags = this.generateSeoTags(page);
       this.updateHeadTags(document, tags);
+      this.updateHtmlTags(document, page.tags);
       this.generateSitemapAndRobots(site);
       await this.addTailwind(id);
-      await this.addTailwindLinkToHtml(sitePath);
       fs.writeFileSync(indexPath, dom.serialize(), 'utf-8');
+      await this.addTailwindLinkToHtml(sitePath);
     }
 
     const publicPath = path.join(sitePath, 'public');
-    if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath);
+    fs.mkdirSync(publicPath, { recursive: true });
 
     const moveFilesToPublic = (dir: string) => {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
 
-        // Пропускаємо заборонені
         if (
           entry.name === 'src' ||
           entry.name === 'node_modules' ||
@@ -312,11 +359,10 @@ export class GenerateFromRelumeService {
         const destPath = path.join(publicPath, entry.name);
 
         if (entry.isDirectory()) {
+          // ⚡ Тепер копіюємо, але не видаляємо (щоб можна було перебудувати)
           fs.cpSync(fullPath, destPath, { recursive: true });
-          fs.rmSync(fullPath, { recursive: true, force: true });
         } else if (entry.isFile()) {
           fs.copyFileSync(fullPath, destPath);
-          fs.unlinkSync(fullPath);
         }
       }
     };
@@ -512,6 +558,7 @@ Sitemap: ${baseUrl}/sitemap.xml`;
       throw error;
     }
   }
+
   private async addTailwind(siteId: string) {
     try {
       const sitePath = path.join(process.cwd(), 'sites', siteId);
@@ -519,7 +566,36 @@ Sitemap: ${baseUrl}/sitemap.xml`;
         throw new Error(`Site folder not found: ${sitePath}`);
       }
 
-      // Якщо немає package.json – створюємо
+      // === 1. Знаходимо всі HTML-файли для safelist ===
+      const htmlFiles: string[] = [];
+      function findHtmlFiles(dir: string) {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries.filter((n) => n.name !== 'node_modules')) {
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            findHtmlFiles(fullPath);
+          } else if (entry.isFile() && entry.name.endsWith('.html')) {
+            htmlFiles.push(fullPath);
+          }
+        }
+      }
+      findHtmlFiles(sitePath);
+
+      // === 2. Збираємо всі класи з HTML ===
+      const allClasses = new Set<string>();
+      const classRegex = /class=["']([^"']+)["']/g;
+      for (const file of htmlFiles) {
+        const html = fs.readFileSync(file, 'utf-8');
+        let match;
+        while ((match = classRegex.exec(html)) !== null) {
+          match[1].split(/\s+/).forEach((cls) => allClasses.add(cls));
+        }
+      }
+      const safelistArray = Array.from(allClasses)
+        .map((c) => `'${c}'`)
+        .join(', ');
+
+      // === 3. Створюємо package.json, якщо немає ===
       if (!fs.existsSync(path.join(sitePath, 'package.json'))) {
         execSync('npm init -y', {
           cwd: sitePath,
@@ -535,10 +611,20 @@ Sitemap: ${baseUrl}/sitemap.xml`;
         process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss',
       );
 
-      // Встановлюємо Tailwind, якщо ще немає
+      // === 4. Встановлюємо Tailwind та залежності, якщо немає ===
       if (!fs.existsSync(tailwindBin)) {
         console.log('Installing Tailwind CSS...');
         execSync('npm install -D tailwindcss@3.3.3 postcss autoprefixer', {
+          cwd: sitePath,
+          stdio: 'inherit',
+          shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
+        });
+        execSync('npm i tailwindcss-animate @tailwindcss/typography', {
+          cwd: sitePath,
+          stdio: 'inherit',
+          shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
+        });
+        execSync('npm i @relume_io/relume-ui @relume_io/relume-tailwind', {
           cwd: sitePath,
           stdio: 'inherit',
           shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
@@ -550,26 +636,30 @@ Sitemap: ${baseUrl}/sitemap.xml`;
           '.bin',
           process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss',
         );
-
         if (!fs.existsSync(tailwindBin)) {
           throw new Error('Tailwind CLI not found after install');
         }
       }
 
-      // Tailwind config
+      // === 5. Tailwind config з динамічним safelist ===
       const tailwindConfig = `/** @type {import('tailwindcss').Config} */
+
 module.exports = {
-  content: ["./**/*.html"],
-  theme: { extend: {} },
-  plugins: [],
-};`;
+  content: [
+    "./sites/**/*.html",
+    "./node_modules/@relume_io/relume-ui/dist/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}"
+  ],
+  presets: [require("@relume_io/relume-tailwind")],
+  safelist: [${safelistArray}]
+}`;
       fs.writeFileSync(
         path.join(sitePath, 'tailwind.config.js'),
         tailwindConfig,
         'utf-8',
       );
 
-      // PostCSS config
+      // === 6. PostCSS config ===
       const postcssConfig = `module.exports = {
   plugins: {
     tailwindcss: {},
@@ -582,19 +672,40 @@ module.exports = {
         'utf-8',
       );
 
-      // Вхідний CSS
+      // === 7. Вхідний CSS з обнуленням ===
       const cssFolder = path.join(sitePath, 'src', 'css');
       fs.mkdirSync(cssFolder, { recursive: true });
       fs.writeFileSync(
         path.join(cssFolder, 'input.css'),
-        '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n',
+        `
+/* === Обнулення стилів === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  min-height: 100vh;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`,
         'utf-8',
       );
 
-      // ⚡ Будуємо одразу в public/css, а не dist/
+      // === 8. Папка для зібраного CSS ===
       const publicCssFolder = path.join(sitePath, 'public', 'css');
       fs.mkdirSync(publicCssFolder, { recursive: true });
 
+      // === 9. Будуємо Tailwind ===
       console.log('Building Tailwind CSS...');
       execSync(
         `${tailwindBin} -i ./src/css/input.css -o ./public/css/style.css --minify`,
@@ -604,6 +715,17 @@ module.exports = {
           shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',
         },
       );
+
+      // === 10. Видаляємо font-size і font-weight для h1-h6 навіть у мінімізованому CSS ===
+      const cssPath = path.join(publicCssFolder, 'style.css');
+      let cssContent = fs.readFileSync(cssPath, 'utf-8');
+      cssContent = cssContent.replace(/h1,h2,h3,h4,h5,h6\{[^}]*\}/gi, (match) =>
+        match
+          .replace(/font-size:inherit;?/gi, '')
+          .replace(/font-weight:inherit;?/gi, ''),
+      );
+      fs.writeFileSync(cssPath, cssContent, 'utf-8');
+      console.log('✅ Removed h1-h6 inherit rules from style.css');
 
       console.log(
         `✅ Tailwind CSS setup and build complete for site ${siteId}`,
@@ -620,7 +742,7 @@ module.exports = {
 
     function findHtmlFiles(dir: string) {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
+      for (const entry of entries.filter((n) => n.name !== 'node_modules')) {
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) {
           findHtmlFiles(fullPath);
@@ -631,27 +753,33 @@ module.exports = {
     }
 
     findHtmlFiles(sitePath);
+    console.log(htmlFiles);
+    const linkTag = `<link rel="stylesheet" href="/css/style.css">`;
 
     for (const filePath of htmlFiles) {
       let html = fs.readFileSync(filePath, 'utf-8');
 
-      const linkTag = `<link rel="stylesheet" href="/css/style.css">`;
-
-      // Забираємо старі шляхи на ../dist/ чи ./dist/
+      // 1. Прибираємо всі старі style.css (будь-які шляхи)
       html = html.replace(
-        /<link[^>]+href=["'][^"']*dist\/css\/style\.css["'][^>]*>/g,
+        /<link[^>]+href=["'][^"']*style\.css["'][^>]*>\s*/gi,
         '',
       );
 
-      if (!html.includes(linkTag)) {
-        if (html.includes('<head>')) {
-          html = html.replace('<head>', `<head>\n  ${linkTag}`);
-        } else {
-          html = `${linkTag}\n${html}`;
-        }
-        fs.writeFileSync(filePath, html, 'utf-8');
-        console.log(`✅ Added Tailwind link to ${filePath}`);
+      // 2. Якщо є <head ...> — вставляємо одразу після нього
+      if (/<head[^>]*>/i.test(html)) {
+        html = html.replace(
+          /<head[^>]*>/i,
+          (match) => `${match}\n  ${linkTag}`,
+        );
+      } else {
+        html = `${linkTag}\n${html}`;
       }
+      console.log('----- PATCHED HTML START -----');
+      console.log(html.slice(0, 500));
+      console.log('----- PATCHED HTML END -----');
+
+      fs.writeFileSync(filePath, html, 'utf-8');
+      console.log(`✅ Added Tailwind link to ${filePath}`);
     }
   }
 
@@ -679,13 +807,24 @@ module.exports = {
   }
   async deleteSite(id: string) {
     const uploadDir = path.join(process.cwd(), 'sites');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
     const extractPath = path.join(uploadDir, id);
+
     if (fs.existsSync(extractPath)) {
-      fs.rmSync(extractPath, { recursive: true, force: true });
+      try {
+        if (os.platform() === 'win32') {
+          // видалення папки на Windows
+          execSync(`rd /s /q "${extractPath}"`);
+        } else {
+          // Unix
+          execSync(`rm -rf "${extractPath}"`);
+        }
+        console.log('Deleted site folder:', extractPath);
+      } catch (err) {
+        console.error('Failed to delete site folder:', err);
+        throw err;
+      }
     }
+
     return this.siteRepo.delete(id);
   }
 }

@@ -15,6 +15,9 @@ export class Site {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'uuid' })
+  userId: string;
+
   @Column({ type: 'text', nullable: true })
   companyName: string;
 

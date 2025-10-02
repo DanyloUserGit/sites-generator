@@ -40,12 +40,12 @@ export class CsvService {
       throw error;
     }
   }
-  async createFromCSV(fileBuffer: Buffer) {
+  async createFromCSV(userId: string, fileBuffer: Buffer) {
     try {
       const data = await this.parseAndValidateCsv(fileBuffer);
       if (!data) return new Error('Error in collecting data from file');
 
-      return await this.sitesService.createSite(data);
+      return await this.sitesService.createSite(userId, data);
     } catch (error) {
       throw error;
     }

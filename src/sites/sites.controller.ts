@@ -11,6 +11,7 @@ import {
 import { CrudSitesService } from './crud-sites.service';
 import { CreateSiteDTO } from './dto/create-site.dto';
 import { SitesService } from './sites.service';
+import { CurrentUserId } from 'src/auth/CurrentUserId';
 
 @Controller('sites')
 export class SitesController {
@@ -36,8 +37,11 @@ export class SitesController {
   }
 
   @Post('create-from-input')
-  async createFromInput(@Body() body: CreateSiteDTO) {
-    return await this.sitesService.createSite(body);
+  async createFromInput(
+    @Body() body: CreateSiteDTO,
+    @CurrentUserId() userId: string,
+  ) {
+    return await this.sitesService.createSite(userId, body);
   }
 
   @Get('site/:id')

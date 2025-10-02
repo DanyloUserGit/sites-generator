@@ -7,11 +7,13 @@ import { Admin } from './entities/admin.entity';
 import { AppConfigModule } from 'src/config/config.module';
 import { AppConfigService } from 'src/config/config.service';
 import { JwtStrategy } from './jwt-auth.strategy';
+import { UserSettingsModule } from 'src/user-settings/user-settings.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Admin]),
     AppConfigModule,
+    UserSettingsModule,
     JwtModule.registerAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],

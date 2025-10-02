@@ -4,6 +4,7 @@ import { Admin } from './entities/admin.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { UserSettingsService } from 'src/user-settings/user-settings.service';
 
 @Injectable()
 export class AuthService {
@@ -11,6 +12,7 @@ export class AuthService {
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
     private jwtService: JwtService,
+    private userSettingsService: UserSettingsService,
   ) {}
 
   async register(login: string, password: string): Promise<Admin> {
@@ -20,6 +22,7 @@ export class AuthService {
       login,
       password: hashedPassword,
     });
+    await this.userSettingsService.createUserSettings(admin.id);
     return await this.adminRepository.save(admin);
   }
 

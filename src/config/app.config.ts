@@ -6,6 +6,7 @@ export default () => ({
   unsplash_access_key: process.env.UNSPLASH_ACCESS_KEY,
   cloudflare_token: process.env.CLOUDFLARE_TOKEN,
   mapbox_token: process.env.MAPBOX_TOKEN,
+  openrouter_key: process.env.OPENROUTER_KEY,
   database: {
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT, 10) || 5432,

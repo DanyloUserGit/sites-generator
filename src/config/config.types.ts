@@ -1,5 +1,3 @@
-import { ServerType } from 'typeorm';
-
 export interface AppConfig {
   port: number;
   jwt_secret: string;
@@ -8,6 +6,7 @@ export interface AppConfig {
   cloudflare_token: string;
   unsplash_access_key: string;
   mapbox_token: string;
+  openrouter_key: string;
   database: {
     host: string;
     port: number;

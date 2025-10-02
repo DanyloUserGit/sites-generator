@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { GenerateFromRelumeService } from './generate-from-relume.service';
 import { CreateSiteDTO } from 'src/sites/dto/create-site.dto';
 import { GenerateSeoFromRelumeService } from './generate-seo-from-relume.service';
+import { CurrentUserId } from 'src/auth/CurrentUserId';
 
 @Controller('generate-from-relume')
 export class GenerateFromRelumeController {
@@ -35,8 +36,9 @@ export class GenerateFromRelumeController {
   async createSite(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateSiteDTO,
+    @CurrentUserId() userId: string,
   ) {
-    return this.relumeService.createSite(file, body);
+    return this.relumeService.createSite(userId, file, body);
   }
 
   @Post('generate-seo/:id')

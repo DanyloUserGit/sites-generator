@@ -103,4 +103,5 @@ export interface ITag {
   type: string;
   value: string;
   page: IRelumePage;
+  position: number;
 }

@@ -9,6 +9,9 @@ export class Tag {
   @Column()
   type: string;
 
+  @Column({ type: 'int' })
+  position: number;
+
   @Column()
   value: string;
 

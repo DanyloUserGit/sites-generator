@@ -13,6 +13,9 @@ export class RelumeSite {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  userId: string;
+
   @Column()
   name: string;
 

@@ -19,6 +19,8 @@ import { MapboxModule } from './mapbox/mapbox.module';
 import { TemplateModule } from './template/template.module';
 import { DeploymentModule } from './deployment/deployment.module';
 import { GenerateFromRelumeModule } from './generate-from-relume/generate-from-relume.module';
+import { UserSettingsModule } from './user-settings/user-settings.module';
+import { OpenrouterModule } from './openrouter/openrouter.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { GenerateFromRelumeModule } from './generate-from-relume/generate-from-r
     TemplateModule,
     DeploymentModule,
     GenerateFromRelumeModule,
+    UserSettingsModule,
+    OpenrouterModule,
   ],
   providers: [
     {

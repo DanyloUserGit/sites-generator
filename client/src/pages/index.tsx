@@ -1,4 +1,6 @@
 import Header from '@/components/Header';
+import Settings from '@/components/svg/Settings';
+import Button from '@/components/ui/Button';
 import Dashboard from '@/components/ui/dashboard/Dashboard';
 import Dropdown from '@/components/ui/Dropdown';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';

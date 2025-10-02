@@ -16,6 +16,7 @@ export class AppConfigService {
       unsplash_access_key: this.configService.get<string>(
         'UNSPLASH_ACCESS_KEY',
       ),
+      openrouter_key: this.configService.get<string>('OPENROUTER_KEY'),
       mapbox_token: this.configService.get<string>('MAPBOX_TOKEN'),
       database: {
         host: this.configService.get<string>('DB_HOST'),

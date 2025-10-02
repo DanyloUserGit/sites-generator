@@ -64,7 +64,7 @@ export class SitesService {
     };
   }
 
-  async createSite(body: CreateSiteDTO) {
+  async createSite(userId: string, body: CreateSiteDTO) {
     try {
       const { city, services, language, domain } = body;
       if (!city.length || !services.length || !language.length || !domain)
@@ -72,6 +72,7 @@ export class SitesService {
       const validDomain = this.deploymentService.validateDomainReceiver(domain);
       if (!validDomain) throw new Error('Invalid domain');
       const site = this.siteRepository.create({
+        userId,
         city,
         language,
         services,
